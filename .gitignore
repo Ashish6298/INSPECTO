@@ -1,0 +1,45 @@
+# General
+.env
+*.log
+.DS_Store
+.history
+node_modules/
+
+# Flutter / Dart
+inspecto/.dart_tool/
+inspecto/.flutter-plugins
+inspecto/.flutter-plugins-dependencies
+inspecto/.metadata
+inspecto/.pub-cache/
+inspecto/.pub/
+inspecto/build/
+inspecto/analysis_output.txt
+inspecto/analysis.log
+
+# Android Studio / IntelliJ
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code
+.vscode/
+
+# Build Artifacts
+*/android/app/debug/
+*/android/app/profile/
+*/android/app/release/
+*/ios/Flutter/.last_build_id
+*/linux/flutter/ephemeral/
+*/macos/Flutter/ephemeral/
+*/windows/flutter/ephemeral/
+
+# Backend specific
+backend/node_modules/
+backend/.env
+backend/package-lock.json
+
+# Tooling related
+.gemini/
+brain/
+.qodo/
