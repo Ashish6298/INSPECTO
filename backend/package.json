@@ -1,11 +1,14 @@
 {
   "dependencies": {
     "axios": "^1.13.4",
+    "codex": "^0.2.3",
     "cors": "^2.8.6",
     "dotenv": "^17.2.4",
     "express": "^5.2.1",
+    "form-data": "^4.0.5",
     "mongoose": "^9.1.6",
-    "morgan": "^1.10.1"
+    "morgan": "^1.10.1",
+    "qs": "^6.15.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"

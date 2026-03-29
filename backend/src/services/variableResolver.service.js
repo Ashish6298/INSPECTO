@@ -18,9 +18,14 @@ const resolveVariables = (inputString, variables) => {
  * Deeply resolves variables in an object (headers, body, etc).
  */
 const resolveObject = (obj, variables) => {
-  const str = JSON.stringify(obj);
-  const resolvedStr = resolveVariables(str, variables);
-  return JSON.parse(resolvedStr);
+  if (!obj) return obj;
+  try {
+    const str = JSON.stringify(obj);
+    const resolvedStr = resolveVariables(str, variables);
+    return JSON.parse(resolvedStr);
+  } catch (e) {
+    return obj; // Return original if resolution fails (e.g., circular ref)
+  }
 };
 
 module.exports = { resolveVariables, resolveObject };
