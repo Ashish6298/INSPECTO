@@ -7,7 +7,10 @@ class ApiRequest {
   final Map<String, String> headers;
   final Map<String, String> params;
   final String? body;
-  final String? bodyType; // 'none', 'json', 'form'
+  final String? bodyType; // 'none', 'json', 'form-data', 'x-www-form-urlencoded', 'raw', 'binary', 'graphql'
+  final String? bodySubType; // 'text', 'json', 'javascript', 'html', 'xml'
+  final String? authType; // 'none', 'basic', 'bearer', 'apiKey'
+  final Map<String, dynamic>? authDetails;
 
   ApiRequest({
     required this.id,
@@ -17,5 +20,8 @@ class ApiRequest {
     required this.params,
     this.body,
     this.bodyType = 'none',
+    this.bodySubType = 'json',
+    this.authType = 'none',
+    this.authDetails = const {},
   });
 }

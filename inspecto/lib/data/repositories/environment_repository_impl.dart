@@ -4,7 +4,7 @@ import '../../domain/entities/environment.dart';
 import '../../domain/repositories/environment_repository.dart';
 
 class EnvironmentRepositoryImpl implements EnvironmentRepository {
-  final String baseUrl = 'http://10.0.2.2:5000/api/environments';
+  final String baseUrl = 'http://10.0.2.2:3000/api/environments';
 
   @override
   Future<List<Environment>> getEnvironments() async {

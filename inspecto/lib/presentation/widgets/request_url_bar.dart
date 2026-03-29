@@ -50,15 +50,31 @@ class RequestUrlBar extends StatelessWidget {
           const SizedBox(height: 8),
           Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF000000),
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFF1A1A1A), width: 1.5),
+              border: Border.all(
+                color: provider.url.isNotEmpty && !provider.validateUrl()
+                    ? Colors.red.withOpacity(0.5)
+                    : Theme.of(context).dividerColor,
+                width: Theme.of(context).brightness == Brightness.dark ? 1.5 : 1.0,
+              ),
+              boxShadow: Theme.of(context).brightness == Brightness.light
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      )
+                    ]
+                  : null,
             ),
             child: Row(
               children: [
                 _MethodDropdown(provider: provider),
                 Container(
-                    width: 1.5, height: 24, color: const Color(0xFF1A1A1A)),
+                    width: 1.5,
+                    height: 24,
+                    color: Theme.of(context).dividerColor),
                 Expanded(
                   child: TextField(
                     style: TextStyle(

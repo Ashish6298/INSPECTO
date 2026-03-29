@@ -13,6 +13,9 @@ class ApiRequestModel extends ApiRequest {
     required super.params,
     super.body,
     super.bodyType,
+    super.bodySubType,
+    super.authType,
+    super.authDetails,
   });
 
   factory ApiRequestModel.fromJson(Map<String, dynamic> json) =>
@@ -28,6 +31,9 @@ class ApiRequestModel extends ApiRequest {
       params: entity.params,
       body: entity.body,
       bodyType: entity.bodyType,
+      bodySubType: entity.bodySubType,
+      authType: entity.authType,
+      authDetails: entity.authDetails,
     );
   }
 }

@@ -32,26 +32,38 @@ class _EnvironmentsScreenState extends State<EnvironmentsScreen> {
           ),
         ],
       ),
-      body: provider.environments.isEmpty
-          ? const Center(child: Text('No environments yet'))
-          : ListView.builder(
-              itemCount: provider.environments.length,
-              itemBuilder: (context, index) {
-                final env = provider.environments[index];
-                return ListTile(
-                  leading: const Icon(Icons.language, color: Colors.blue),
-                  title: Text(env.name),
-                  subtitle: Text('${env.variables.length} variables'),
-                  trailing: Switch(
-                    value: provider.activeEnvironment?.id == env.id,
-                    onChanged: (value) {
-                      provider.setActiveEnvironment(value ? env : null);
-                    },
+      body: RefreshIndicator(
+        onRefresh: () => provider.loadEnvironments(),
+        child: provider.environments.isEmpty
+            ? const Center(
+                child: SingleChildScrollView(
+                  physics: AlwaysScrollableScrollPhysics(),
+                  child: SizedBox(
+                    height: 200,
+                    child: Center(child: Text('No environments yet')),
                   ),
-                  onTap: () => _showVariablesDialog(context, env),
-                );
-              },
-            ),
+                ),
+              )
+            : ListView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                itemCount: provider.environments.length,
+                itemBuilder: (context, index) {
+                  final env = provider.environments[index];
+                  return ListTile(
+                    leading: const Icon(Icons.language, color: Colors.blue),
+                    title: Text(env.name),
+                    subtitle: Text('${env.variables.length} variables'),
+                    trailing: Switch(
+                      value: provider.activeEnvironment?.id == env.id,
+                      onChanged: (value) {
+                        provider.setActiveEnvironment(value ? env : null);
+                      },
+                    ),
+                    onTap: () => _showVariablesDialog(context, env),
+                  );
+                },
+              ),
+      ),
     );
   }
 
@@ -71,6 +83,12 @@ class _EnvironmentsScreenState extends State<EnvironmentsScreen> {
               child: const Text('Cancel')),
           TextButton(
             onPressed: () {
+              if (controller.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Environment name cannot be empty')),
+                );
+                return;
+              }
               context
                   .read<EnvironmentProvider>()
                   .addEnvironment(controller.text);

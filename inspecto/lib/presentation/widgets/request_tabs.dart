@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/request_provider.dart';
 import 'key_value_list.dart';
 import 'request_body_editor.dart';
+import 'authorization_editor.dart';
 
 class RequestTabs extends StatefulWidget {
   const RequestTabs({super.key});
@@ -18,7 +19,7 @@ class _RequestTabsState extends State<RequestTabs>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -29,10 +30,12 @@ class _RequestTabsState extends State<RequestTabs>
       children: [
         TabBar(
           controller: _tabController,
-          indicatorColor: Colors.deepPurple,
-          labelColor: Colors.deepPurpleAccent,
+          labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+          unselectedLabelStyle: const TextStyle(fontSize: 12),
+          indicatorColor: Theme.of(context).colorScheme.primary,
           tabs: const [
             Tab(text: 'Params'),
+            Tab(text: 'Auth'),
             Tab(text: 'Headers'),
             Tab(text: 'Body'),
           ],
@@ -47,6 +50,7 @@ class _RequestTabsState extends State<RequestTabs>
                 data: provider.params,
                 onChanged: provider.setParams,
               ),
+              const AuthorizationEditor(),
               KeyValueList(
                 title: 'Headers',
                 data: provider.headers,

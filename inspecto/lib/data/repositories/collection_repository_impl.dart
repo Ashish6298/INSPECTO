@@ -6,7 +6,7 @@ import '../../domain/repositories/collection_repository.dart';
 import '../models/api_request_model.dart';
 
 class CollectionRepositoryImpl implements CollectionRepository {
-  final String baseUrl = 'http://10.0.2.2:5000/api/collections';
+  final String baseUrl = 'http://10.0.2.2:3000/api/collections';
 
   @override
   Future<List<Collection>> getCollections() async {

@@ -15,9 +15,13 @@ class RequestProvider with ChangeNotifier {
   Map<String, String> _params = {};
   String? _body;
   String _bodyType = 'none';
+  String _bodySubType = 'json';
+  String _authType = 'none';
+  Map<String, dynamic> _authDetails = {};
 
   ApiResponse? _response;
   bool _isLoading = false;
+  bool _isRefreshing = false;
 
   // Getters
   HttpMethod get method => _method;
@@ -26,8 +30,12 @@ class RequestProvider with ChangeNotifier {
   Map<String, String> get params => _params;
   String? get body => _body;
   String get bodyType => _bodyType;
+  String get bodySubType => _bodySubType;
+  String get authType => _authType;
+  Map<String, dynamic> get authDetails => _authDetails;
   ApiResponse? get response => _response;
   bool get isLoading => _isLoading;
+  bool get isRefreshing => _isRefreshing;
 
   // Setters
   void setMethod(HttpMethod method) {
@@ -75,6 +83,25 @@ class RequestProvider with ChangeNotifier {
 
   void setBodyType(String type) {
     _bodyType = type;
+    if (type == 'json' || type == 'graphql') {
+      _bodySubType = 'json';
+    }
+    notifyListeners();
+  }
+
+  void setBodySubType(String subType) {
+    _bodySubType = subType;
+    notifyListeners();
+  }
+
+  void setAuthType(String type) {
+    _authType = type;
+    _authDetails = {}; // Reset details when type changes
+    notifyListeners();
+  }
+
+  void updateAuthDetail(String key, dynamic value) {
+    _authDetails[key] = value;
     notifyListeners();
   }
 
@@ -84,6 +111,38 @@ class RequestProvider with ChangeNotifier {
 
   void setEnvironmentId(String? id) {
     _environmentId = id;
+    notifyListeners();
+  }
+
+  void clearRequest() {
+    _method = HttpMethod.GET;
+    _url = '';
+    _headers = {};
+    _params = {};
+    _body = null;
+    _bodyType = 'none';
+    _bodySubType = 'json';
+    _authType = 'none';
+    _authDetails = {};
+    _response = null;
+    _isLoading = false;
+    _isRefreshing = false;
+    notifyListeners();
+  }
+
+  bool validateUrl() {
+    if (_url.isEmpty) return false;
+    // Simple regex check for http/https
+    final urlPattern = RegExp(r"^(https?:\/\/|{{.*?}}).+$");
+    return urlPattern.hasMatch(_url);
+  }
+
+  Future<void> refresh() async {
+    _isRefreshing = true;
+    notifyListeners();
+    // Simulate a brief refresh delay for visual feedback
+    await Future.delayed(const Duration(milliseconds: 1200));
+    _isRefreshing = false;
     notifyListeners();
   }
 
@@ -101,6 +160,9 @@ class RequestProvider with ChangeNotifier {
         params: _params,
         body: _body,
         bodyType: _bodyType,
+        bodySubType: _bodySubType,
+        authType: _authType,
+        authDetails: _authDetails,
       );
 
       _response = await (apiRepository as ApiRepositoryImpl)

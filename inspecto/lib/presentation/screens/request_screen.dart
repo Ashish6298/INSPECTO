@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 import '../providers/request_provider.dart';
 import '../widgets/request_url_bar.dart';
 import '../widgets/request_tabs.dart';
@@ -11,6 +12,7 @@ class RequestScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final requestProvider = context.watch<RequestProvider>();
+    final themeProvider = context.watch<ThemeProvider>();
 
     return Scaffold(
       appBar: AppBar(
@@ -30,6 +32,17 @@ class RequestScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
+            icon: Icon(
+              themeProvider.isDarkMode
+                  ? Icons.light_mode_rounded
+                  : Icons.dark_mode_rounded,
+            ),
+            onPressed: () {
+              themeProvider.toggleTheme();
+            },
+            tooltip: 'Toggle Theme',
+          ),
+          IconButton(
             icon: const Icon(Icons.bookmark_border_rounded),
             onPressed: () {
               // TODO: Save to collection
@@ -39,37 +52,85 @@ class RequestScreen extends StatelessWidget {
           const SizedBox(width: 8),
         ],
       ),
-      body: Column(
+      body: Stack(
         children: [
-          const RequestUrlBar(),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 80),
-              child: Column(
-                children: [
-                  const RequestTabs(),
-                  if (requestProvider.response != null) const ResponseViewer(),
-                  if (requestProvider.isLoading)
-                    const Padding(
-                      padding: EdgeInsets.all(32.0),
-                      child: CircularProgressIndicator(),
+          Column(
+            children: [
+              const RequestUrlBar(),
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: () async {
+                    await context.read<RequestProvider>().refresh();
+                  },
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.only(bottom: 80),
+                    child: Column(
+                      children: [
+                        const RequestTabs(),
+                        if (requestProvider.response != null)
+                          const ResponseViewer(),
+                        if (requestProvider.isLoading)
+                          const Padding(
+                            padding: EdgeInsets.all(32.0),
+                            child: CircularProgressIndicator(),
+                          ),
+                        if (requestProvider.response == null &&
+                            !requestProvider.isLoading)
+                          _EmptyRequestState(),
+                      ],
                     ),
-                  if (requestProvider.response == null &&
-                      !requestProvider.isLoading)
-                    _EmptyRequestState(),
-                ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (requestProvider.isRefreshing)
+            Container(
+              color: Colors.black.withOpacity(0.5),
+              child: Center(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 10,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Refreshing... Please wait',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
         ],
       ),
       floatingActionButton: Container(
         height: 56,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: FloatingActionButton.extended(
-          onPressed: () {
-            context.read<RequestProvider>().sendRequest();
-          },
+          onPressed: requestProvider.validateUrl()
+              ? () {
+                  requestProvider.sendRequest();
+                }
+              : null,
           elevation: 4,
           icon: const Icon(Icons.bolt_rounded, size: 24),
           label: const Text(

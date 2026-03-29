@@ -51,10 +51,21 @@ class _KeyValueListState extends State<KeyValueList> {
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF000000), // Keep slight grey for surface separation
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(12),
-                  border:
-                      Border.all(color: const Color(0xFF111111), width: 1.5),
+                  border: Border.all(
+                    color: Theme.of(context).dividerColor,
+                    width: Theme.of(context).brightness == Brightness.dark ? 1.5 : 1.0,
+                  ),
+                  boxShadow: Theme.of(context).brightness == Brightness.light
+                      ? [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          )
+                        ]
+                      : null,
                 ),
                 child: Row(
                   children: [
@@ -155,11 +166,11 @@ class _KeyValueListState extends State<KeyValueList> {
             icon: const Icon(Icons.add_rounded, size: 18),
             label: const Text('Add Row'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFFCBA6F7),
-              side: const BorderSide(color: Color(0xFFCBA6F7)),
+              foregroundColor: Theme.of(context).colorScheme.primary,
+              side: BorderSide(color: Theme.of(context).colorScheme.primary),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12)),
-              minimumSize: const Size(double.infinity, 45),
+              minimumSize: const Size(double.infinity, 48),
             ),
           ),
         ),

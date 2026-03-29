@@ -15,6 +15,9 @@ ApiRequestModel _$ApiRequestModelFromJson(Map<String, dynamic> json) =>
       params: Map<String, String>.from(json['params'] as Map),
       body: json['body'] as String?,
       bodyType: json['bodyType'] as String? ?? 'none',
+      bodySubType: json['bodySubType'] as String? ?? 'json',
+      authType: json['authType'] as String? ?? 'none',
+      authDetails: json['authDetails'] as Map<String, dynamic>? ?? const {},
     );
 
 Map<String, dynamic> _$ApiRequestModelToJson(ApiRequestModel instance) =>
@@ -26,6 +29,9 @@ Map<String, dynamic> _$ApiRequestModelToJson(ApiRequestModel instance) =>
       'params': instance.params,
       'body': instance.body,
       'bodyType': instance.bodyType,
+      'bodySubType': instance.bodySubType,
+      'authType': instance.authType,
+      'authDetails': instance.authDetails,
     };
 
 const _$HttpMethodEnumMap = {

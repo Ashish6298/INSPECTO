@@ -31,29 +31,33 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
           ),
         ],
       ),
-      body: provider.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : provider.collections.isEmpty
-              ? const Center(child: Text('No collections yet'))
-              : ListView.builder(
-                  itemCount: provider.collections.length,
-                  itemBuilder: (context, index) {
-                    final collection = provider.collections[index];
-                    return ExpansionTile(
-                      leading: const Icon(Icons.folder, color: Colors.amber),
-                      title: Text(collection.name),
-                      children: collection.requests.map((request) {
-                        return ListTile(
-                          title: Text(request.url),
-                          subtitle: Text(request.method.name),
-                          onTap: () {
-                            // TODO: Load into RequestProvider
-                          },
-                        );
-                      }).toList(),
-                    );
-                  },
-                ),
+      body: RefreshIndicator(
+        onRefresh: () => provider.loadCollections(),
+        child: provider.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : provider.collections.isEmpty
+                ? const Center(child: Text('No collections yet'))
+                : ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    itemCount: provider.collections.length,
+                    itemBuilder: (context, index) {
+                      final collection = provider.collections[index];
+                      return ExpansionTile(
+                        leading: const Icon(Icons.folder, color: Colors.amber),
+                        title: Text(collection.name),
+                        children: collection.requests.map((request) {
+                          return ListTile(
+                            title: Text(request.url),
+                            subtitle: Text(request.method.name),
+                            onTap: () {
+                              // TODO: Load into RequestProvider
+                            },
+                          );
+                        }).toList(),
+                      );
+                    },
+                  ),
+      ),
     );
   }
 
@@ -73,6 +77,12 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
               child: const Text('Cancel')),
           TextButton(
             onPressed: () {
+              if (controller.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Collection name cannot be empty')),
+                );
+                return;
+              }
               context
                   .read<CollectionProvider>()
                   .createCollection(controller.text);
