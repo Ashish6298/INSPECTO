@@ -78,8 +78,8 @@ const executeRequest = async (requestData, environment) => {
     const endTime = Date.now();
     const duration = endTime - startTime;
 
-    // 4. Log Execution
-    await ExecutionLog.create({
+    // 4. Log Execution (Non-blocking)
+    ExecutionLog.create({
       requestName: requestData.name || 'Ad-hoc Request',
       method,
       url,
@@ -87,6 +87,8 @@ const executeRequest = async (requestData, environment) => {
       duration,
       responseSize: JSON.stringify(response.data).length,
       success: response.status < 400
+    }).catch (logError => {
+      console.error('Failed to log execution (Non-blocking):', logError.message);
     });
 
     // 5. Return Structured Response

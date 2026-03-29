@@ -14,10 +14,12 @@ app.use(express.json());
 app.use(morgan('dev'));
 
 // Routes
+app.get('/api/health', (req, res) =>
+  res.json({ status: 'healthy', timestamp: new Date() })
+);
 app.use('/api/execute', executeRoutes);
 app.use('/api/collections', collectionRoutes);
 app.use('/api/environments', environmentRoutes);
-
 app.get('/', (req, res) => res.send('API Testing Tool Backend Running'));
 
 module.exports = app;
