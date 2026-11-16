@@ -1,12 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_highlight/flutter_highlight.dart';
-import 'package:flutter_highlight/themes/atom-one-dark.dart';
 import '../providers/request_provider.dart';
+import 'response_body_view.dart';
+import 'response_cookies_view.dart';
+import 'response_headers_view.dart';
 
-class ResponseViewer extends StatelessWidget {
+class ResponseViewer extends StatefulWidget {
   const ResponseViewer({super.key});
+
+  @override
+  State<ResponseViewer> createState() => _ResponseViewerState();
+}
+
+class _ResponseViewerState extends State<ResponseViewer>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,12 +43,24 @@ class ResponseViewer extends StatelessWidget {
 
         final isSuccess =
             response.statusCode >= 200 && response.statusCode < 300;
+        final cookies = ParsedCookie.parseHeaders(response.headers);
+        final headerCount = response.headers.length;
+        final cookieCount = cookies.length;
+
+        String? contentType;
+        for (final entry in response.headers.entries) {
+          if (entry.key.toLowerCase() == 'content-type') {
+            contentType = entry.value.split(';').first.trim();
+            break;
+          }
+        }
 
         return Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header title & quick action
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -36,7 +74,7 @@ class ResponseViewer extends StatelessWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.copy_rounded, size: 18),
-                    tooltip: 'Copy Response',
+                    tooltip: 'Copy Response Body',
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: response.body));
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -50,11 +88,20 @@ class ResponseViewer extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
+
+              // Main Response Card
               Card(
                 color: const Color(0xFF050505),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(
+                    color: Theme.of(context).dividerColor.withValues(alpha: 0.15),
+                  ),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Metrics Chips
                     Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Wrap(
@@ -83,31 +130,54 @@ class ResponseViewer extends StatelessWidget {
                             color: Colors.blue[700]!,
                             icon: Icons.data_usage_rounded,
                           ),
+                          if (contentType != null && contentType.isNotEmpty)
+                            _InfoChip(
+                              label: 'Type',
+                              value: contentType,
+                              color: const Color(0xFFCBA6F7),
+                              icon: Icons.category_outlined,
+                            ),
                         ],
                       ),
                     ),
                     const Divider(height: 1),
-                    Container(
-                      width: double.infinity,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF000000),
-                        borderRadius: BorderRadius.only(
-                          bottomLeft: Radius.circular(16),
-                          bottomRight: Radius.circular(16),
-                        ),
-                      ),
-                      padding: const EdgeInsets.all(16),
-                      child: HighlightView(
-                        response.body,
-                        language: 'json',
-                        theme: atomOneDarkTheme,
-                        padding: const EdgeInsets.all(12),
-                        textStyle: const TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 13,
-                        ),
-                      ),
+
+                    // Sub-tabs
+                    TabBar(
+                      controller: _tabController,
+                      isScrollable: true,
+                      tabAlignment: TabAlignment.start,
+                      labelColor: Theme.of(context).colorScheme.primary,
+                      unselectedLabelColor: Colors.grey,
+                      indicatorColor: Theme.of(context).colorScheme.primary,
+                      indicatorSize: TabBarIndicatorSize.label,
+                      tabs: [
+                        const Tab(text: 'Body'),
+                        Tab(text: 'Headers ($headerCount)'),
+                        Tab(text: 'Cookies ($cookieCount)'),
+                        const Tab(text: 'Raw'),
+                      ],
                     ),
+                    const Divider(height: 1),
+
+                    // Active Tab View Content
+                    switch (_tabController.index) {
+                      0 => ResponseBodyView(
+                          response: response,
+                          initialFormat: 'json',
+                        ),
+                      1 => ResponseHeadersView(
+                          headers: response.headers,
+                        ),
+                      2 => ResponseCookiesView(
+                          headers: response.headers,
+                        ),
+                      3 => ResponseBodyView(
+                          response: response,
+                          initialFormat: 'raw',
+                        ),
+                      _ => const SizedBox.shrink(),
+                    },
                   ],
                 ),
               ),

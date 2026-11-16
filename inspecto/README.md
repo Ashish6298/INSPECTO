@@ -94,7 +94,7 @@ Tracked from [phase.txt](../phase.txt):
 - **Milestone 2: Essential Daily-Driver Features**
   - [x] **Phase 2.0**: cURL Importer & Multi-Language Code Snippet Generator (cURL parser, multi-language generator, import/snippet dialogs)
   - [x] **Phase 2.1**: Execution History & Recents Log with Quick Reload (Local persistence, history screen, reload & clear)
-  - [ ] **Phase 2.2**: Advanced Response Viewer (Headers Table, Cookies, Multi-format)
+  - [x] **Phase 2.2**: Advanced Response Viewer (Sub-tabs: Body, Headers, Cookies, Raw; Search & Pretty Print; Cookie attributes)
 - **Milestone 3: Advanced Developer Power Tools**
   - [ ] **Phase 3.0**: Dynamic Environment Chaining & Post-Response Variable Extraction
   - [ ] **Phase 3.1**: Postman Collection & OpenAPI/Swagger Spec Importer

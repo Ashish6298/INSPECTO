@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:inspecto/core/utils/curl_parser.dart';
@@ -7,6 +8,8 @@ import 'package:inspecto/domain/entities/api_response.dart';
 import 'package:inspecto/domain/entities/history_item.dart';
 import 'package:inspecto/data/datasources/history_local_data_source.dart';
 import 'package:inspecto/presentation/providers/history_provider.dart';
+import 'package:inspecto/presentation/widgets/response_headers_view.dart';
+import 'package:inspecto/presentation/widgets/response_cookies_view.dart';
 
 void main() {
   group('Phase 2.0: cURL Parser Tests', () {
@@ -161,6 +164,105 @@ curl -X POST https://api.example.com/v1/users \\
       // Clear history
       await provider.clearHistory();
       expect(provider.history, isEmpty);
+    });
+  });
+
+  group('Phase 2.2: Advanced Response Viewer Tests', () {
+    test('ParsedCookie parses single and multiple cookies correctly', () {
+      final headers = {
+        'content-type': 'application/json',
+        'set-cookie':
+            'sessionId=abc12345; Path=/; Domain=example.com; HttpOnly; Secure; SameSite=Strict, theme=dark; Max-Age=3600; Path=/',
+      };
+
+      final cookies = ParsedCookie.parseHeaders(headers);
+      expect(cookies.length, equals(2));
+
+      final c1 = cookies[0];
+      expect(c1.name, equals('sessionId'));
+      expect(c1.value, equals('abc12345'));
+      expect(c1.path, equals('/'));
+      expect(c1.domain, equals('example.com'));
+      expect(c1.httpOnly, isTrue);
+      expect(c1.secure, isTrue);
+      expect(c1.sameSite, equals('Strict'));
+
+      final c2 = cookies[1];
+      expect(c2.name, equals('theme'));
+      expect(c2.value, equals('dark'));
+      expect(c2.expires, contains('3600'));
+      expect(c2.httpOnly, isFalse);
+    });
+
+    test('ParsedCookie handles Expires header with embedded comma', () {
+      final headers = {
+        'set-cookie':
+            'id=a3fWa; Expires=Wed, 21 Oct 2026 07:28:00 GMT; Path=/; Secure, token=xyz789; HttpOnly',
+      };
+
+      final cookies = ParsedCookie.parseHeaders(headers);
+      expect(cookies.length, equals(2));
+      expect(cookies[0].name, equals('id'));
+      expect(cookies[0].expires, contains('Wed, 21 Oct 2026'));
+      expect(cookies[1].name, equals('token'));
+      expect(cookies[1].httpOnly, isTrue);
+    });
+
+    test('ParsedCookie returns empty list when no set-cookie header exists', () {
+      final cookies = ParsedCookie.parseHeaders({'content-type': 'text/plain'});
+      expect(cookies, isEmpty);
+    });
+
+    testWidgets('ResponseHeadersView renders headers table and filters by query',
+        (WidgetTester tester) async {
+      final headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer sample_token',
+        'X-Trace-Id': 'trace-999',
+      };
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: ResponseHeadersView(headers: headers),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Content-Type'), findsOneWidget);
+      expect(find.text('application/json'), findsOneWidget);
+      expect(find.text('X-Trace-Id'), findsOneWidget);
+
+      // Search for 'trace'
+      await tester.enterText(find.byType(TextField), 'trace');
+      await tester.pump();
+
+      expect(find.text('X-Trace-Id'), findsOneWidget);
+      expect(find.text('Content-Type'), findsNothing);
+    });
+
+    testWidgets('ResponseCookiesView renders cookies with flags',
+        (WidgetTester tester) async {
+      final headers = {
+        'set-cookie': 'auth_token=jwt_val; Path=/api; HttpOnly; Secure',
+      };
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: ResponseCookiesView(headers: headers),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('auth_token'), findsOneWidget);
+      expect(find.text('jwt_val'), findsOneWidget);
+      expect(find.text('HttpOnly'), findsOneWidget);
+      expect(find.text('Secure'), findsOneWidget);
     });
   });
 }
