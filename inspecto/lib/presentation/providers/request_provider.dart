@@ -177,11 +177,14 @@ class RequestProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> sendRequest() async {
+  Future<void> sendRequest({
+    Function(ApiRequest request, ApiResponse response)? onResponseReceived,
+  }) async {
     _isLoading = true;
     _response = null;
     notifyListeners();
 
+    ApiRequest? executedRequest;
     try {
       final request = ApiRequest(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -195,6 +198,7 @@ class RequestProvider with ChangeNotifier {
         authType: _authType,
         authDetails: _authDetails,
       );
+      executedRequest = request;
 
       _response = await (apiRepository as ApiRepositoryImpl)
           .executeWithEnvironment(request, _environmentId);
@@ -209,6 +213,9 @@ class RequestProvider with ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+      if (executedRequest != null && _response != null) {
+        onResponseReceived?.call(executedRequest, _response!);
+      }
     }
   }
 }

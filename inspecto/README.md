@@ -92,8 +92,8 @@ Tracked from [phase.txt](../phase.txt):
   - [x] **Phase 1.2**: Environment Variable Schema & Execution Engine Alignment (Bidirectional Map/List sync, regex escaping, multi-value header parsing)
   - [x] **Phase 1.3**: Connecting Unfinished Frontend Workflows & Fixing Controller Leaks (Save to collection modal, tap-to-load request, controller memory leak fixes)
 - **Milestone 2: Essential Daily-Driver Features**
-  - [ ] **Phase 2.0**: cURL Importer & Multi-Language Code Snippet Generator
-  - [ ] **Phase 2.1**: Execution History & Recents Log with Quick Reload
+  - [x] **Phase 2.0**: cURL Importer & Multi-Language Code Snippet Generator (cURL parser, multi-language generator, import/snippet dialogs)
+  - [x] **Phase 2.1**: Execution History & Recents Log with Quick Reload (Local persistence, history screen, reload & clear)
   - [ ] **Phase 2.2**: Advanced Response Viewer (Headers Table, Cookies, Multi-format)
 - **Milestone 3: Advanced Developer Power Tools**
   - [ ] **Phase 3.0**: Dynamic Environment Chaining & Post-Response Variable Extraction

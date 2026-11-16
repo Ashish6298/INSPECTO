@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'request_screen.dart';
+import 'history_screen.dart';
 import 'collections_screen.dart';
 import 'environments_screen.dart';
 
@@ -15,6 +16,11 @@ class _MainScreenState extends State<MainScreen> {
 
   late final List<Widget> _screens = [
     const RequestScreen(),
+    HistoryScreen(onRequestTapped: () {
+      setState(() {
+        _selectedIndex = 0;
+      });
+    }),
     CollectionsScreen(onRequestTapped: () {
       setState(() {
         _selectedIndex = 0;
@@ -38,6 +44,10 @@ class _MainScreenState extends State<MainScreen> {
           NavigationDestination(
             icon: Icon(Icons.send_rounded),
             label: 'Request',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.history_rounded),
+            label: 'History',
           ),
           NavigationDestination(
             icon: Icon(Icons.folder_rounded),

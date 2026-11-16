@@ -3,9 +3,12 @@ import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/request_provider.dart';
 import '../providers/collection_provider.dart';
+import '../providers/history_provider.dart';
 import '../widgets/request_url_bar.dart';
 import '../widgets/request_tabs.dart';
 import '../widgets/response_viewer.dart';
+import '../widgets/curl_import_dialog.dart';
+import '../widgets/code_snippet_dialog.dart';
 
 class RequestScreen extends StatelessWidget {
   const RequestScreen({super.key});
@@ -42,6 +45,19 @@ class RequestScreen extends StatelessWidget {
               themeProvider.toggleTheme();
             },
             tooltip: 'Toggle Theme',
+          ),
+          IconButton(
+            icon: const Icon(Icons.terminal_rounded),
+            onPressed: () => CurlImportDialog.show(context),
+            tooltip: 'Import cURL',
+          ),
+          IconButton(
+            icon: const Icon(Icons.code_rounded),
+            onPressed: () {
+              final req = requestProvider.getCurrentRequest();
+              CodeSnippetDialog.show(context, req);
+            },
+            tooltip: 'Generate Code',
           ),
           IconButton(
             icon: const Icon(Icons.bookmark_border_rounded),
@@ -127,7 +143,12 @@ class RequestScreen extends StatelessWidget {
         child: FloatingActionButton.extended(
           onPressed: requestProvider.validateUrl()
               ? () {
-                  requestProvider.sendRequest();
+                  final historyProvider = context.read<HistoryProvider>();
+                  requestProvider.sendRequest(
+                    onResponseReceived: (req, res) {
+                      historyProvider.addEntry(request: req, response: res);
+                    },
+                  );
                 }
               : null,
           elevation: 4,

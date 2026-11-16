@@ -5,10 +5,12 @@ import 'package:inspecto/presentation/providers/theme_provider.dart';
 import 'package:inspecto/presentation/providers/request_provider.dart';
 import 'package:inspecto/presentation/providers/collection_provider.dart';
 import 'package:inspecto/presentation/providers/environment_provider.dart';
+import 'package:inspecto/presentation/providers/history_provider.dart';
 import 'package:inspecto/data/repositories/api_repository_impl.dart';
 import 'package:inspecto/data/repositories/collection_repository_impl.dart';
 import 'package:inspecto/data/repositories/environment_repository_impl.dart';
 import 'package:inspecto/data/datasources/api_remote_data_source.dart';
+import 'package:inspecto/data/datasources/history_local_data_source.dart';
 import 'package:inspecto/presentation/screens/splash_screen.dart';
 
 void main() {
@@ -20,6 +22,7 @@ void main() {
     );
     final collectionRepository = CollectionRepositoryImpl();
     final environmentRepository = EnvironmentRepositoryImpl();
+    final historyLocalDataSource = HistoryLocalDataSource();
 
     await tester.pumpWidget(
       MultiProvider(
@@ -34,6 +37,10 @@ void main() {
           ChangeNotifierProvider(
             create: (_) =>
                 EnvironmentProvider(repository: environmentRepository),
+          ),
+          ChangeNotifierProvider(
+            create: (_) =>
+                HistoryProvider(dataSource: historyLocalDataSource),
           ),
         ],
         child: const InspectoApp(),
