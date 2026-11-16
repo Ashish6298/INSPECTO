@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../../core/config/api_config.dart';
 import '../../domain/entities/collection.dart';
 import '../../domain/entities/api_request.dart';
 import '../../domain/repositories/collection_repository.dart';
 import '../models/api_request_model.dart';
 
 class CollectionRepositoryImpl implements CollectionRepository {
-  final String baseUrl = 'http://10.0.2.2:3000/api/collections';
+  final String baseUrl = '${ApiConfig.baseUrl}/collections';
 
   @override
   Future<List<Collection>> getCollections() async {

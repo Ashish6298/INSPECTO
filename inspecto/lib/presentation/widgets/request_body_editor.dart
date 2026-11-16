@@ -66,7 +66,7 @@ class RequestBodyEditor extends StatelessWidget {
                             color: Theme.of(context)
                                 .colorScheme
                                 .onSurface
-                                .withOpacity(0.3)),
+                                .withValues(alpha: 0.3)),
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
@@ -103,7 +103,7 @@ class RequestBodyEditor extends StatelessWidget {
               child: Text(
                 'THIS REQUEST DOES NOT HAVE A BODY',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.5,
                   fontSize: 12,
@@ -127,7 +127,7 @@ class RequestBodyEditor extends StatelessWidget {
       label: Text(label),
       selected: isSelected,
       onSelected: (_) => provider.setBodyType(value),
-      selectedColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+      selectedColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
       labelStyle: TextStyle(
         color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -156,7 +156,7 @@ class RequestBodyEditor extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: isSelected
-                  ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
+                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(

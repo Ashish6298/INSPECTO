@@ -17,9 +17,12 @@ class ApiResponse {
   bool get isError => statusCode >= 400;
 
   String get sizeFormatted {
-    if (responseSize < 1024) return '$responseSize B';
-    if (responseSize < 1024 * 1024)
+    if (responseSize < 1024) {
+      return '$responseSize B';
+    }
+    if (responseSize < 1024 * 1024) {
       return '${(responseSize / 1024).toStringAsFixed(1)} KB';
+    }
     return '${(responseSize / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 }

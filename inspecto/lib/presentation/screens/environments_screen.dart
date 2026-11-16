@@ -14,8 +14,11 @@ class _EnvironmentsScreenState extends State<EnvironmentsScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-        () => context.read<EnvironmentProvider>().loadEnvironments());
+    Future.microtask(() {
+      if (mounted) {
+        context.read<EnvironmentProvider>().loadEnvironments();
+      }
+    });
   }
 
   @override

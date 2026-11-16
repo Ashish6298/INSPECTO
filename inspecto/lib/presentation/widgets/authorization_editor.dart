@@ -82,7 +82,7 @@ class AuthorizationEditor extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.lock_open_rounded,
-              size: 48, color: Colors.grey.withOpacity(0.3)),
+              size: 48, color: Colors.grey.withValues(alpha: 0.3)),
           const SizedBox(height: 16),
           Text(
             'This request does not use any authorization.',
@@ -204,7 +204,7 @@ class AuthorizationEditor extends StatelessWidget {
       label: Text(label, style: const TextStyle(fontSize: 11)),
       selected: selected,
       onSelected: (_) => onSelected(),
-      selectedColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+      selectedColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
       labelStyle: TextStyle(
         color: selected ? Theme.of(context).colorScheme.primary : Colors.grey,
       ),

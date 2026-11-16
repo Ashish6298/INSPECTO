@@ -87,7 +87,7 @@ class RequestScreen extends StatelessWidget {
           ),
           if (requestProvider.isRefreshing)
             Container(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
               child: Center(
                 child: Container(
                   padding:
@@ -97,7 +97,7 @@ class RequestScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         blurRadius: 10,
                         spreadRadius: 2,
                       ),
@@ -156,7 +156,7 @@ class _EmptyRequestState extends StatelessWidget {
           Icon(
             Icons.rocket_launch_outlined,
             size: 64,
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
           ),
           const SizedBox(height: 24),
           Text(
@@ -164,7 +164,7 @@ class _EmptyRequestState extends StatelessWidget {
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               letterSpacing: 2,
               fontSize: 16,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
           const SizedBox(height: 12),

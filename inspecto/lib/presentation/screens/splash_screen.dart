@@ -117,7 +117,7 @@ class _SplashScreenState extends State<SplashScreen> {
             Text(
                   'PROFESSIONAL API TOOLKIT',
                   style: GoogleFonts.inter(
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.3),
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 4,

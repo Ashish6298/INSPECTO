@@ -43,3 +43,4 @@ backend/package-lock.json
 .gemini/
 brain/
 .qodo/
+*.db

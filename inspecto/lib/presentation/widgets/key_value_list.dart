@@ -60,7 +60,7 @@ class _KeyValueListState extends State<KeyValueList> {
                   boxShadow: Theme.of(context).brightness == Brightness.light
                       ? [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           )
@@ -83,7 +83,7 @@ class _KeyValueListState extends State<KeyValueList> {
                               color: Theme.of(context)
                                   .colorScheme
                                   .onSurface
-                                  .withOpacity(0.4)),
+                                  .withValues(alpha: 0.4)),
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8),
                           border: InputBorder.none,
@@ -119,7 +119,7 @@ class _KeyValueListState extends State<KeyValueList> {
                               color: Theme.of(context)
                                   .colorScheme
                                   .primary
-                                  .withOpacity(0.4)),
+                                  .withValues(alpha: 0.4)),
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8),
                           border: InputBorder.none,
@@ -143,8 +143,9 @@ class _KeyValueListState extends State<KeyValueList> {
                       onPressed: () {
                         setState(() {
                           _items.removeAt(index);
-                          if (_items.isEmpty)
+                          if (_items.isEmpty) {
                             _items.add(const MapEntry('', ''));
+                          }
                           _updateData();
                         });
                       },

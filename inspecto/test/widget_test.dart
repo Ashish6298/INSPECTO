@@ -1,30 +1,50 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:provider/provider.dart';
 import 'package:inspecto/main.dart';
+import 'package:inspecto/presentation/providers/theme_provider.dart';
+import 'package:inspecto/presentation/providers/request_provider.dart';
+import 'package:inspecto/presentation/providers/collection_provider.dart';
+import 'package:inspecto/presentation/providers/environment_provider.dart';
+import 'package:inspecto/data/repositories/api_repository_impl.dart';
+import 'package:inspecto/data/repositories/collection_repository_impl.dart';
+import 'package:inspecto/data/repositories/environment_repository_impl.dart';
+import 'package:inspecto/data/datasources/api_remote_data_source.dart';
+import 'package:inspecto/presentation/screens/splash_screen.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const InspectoApp());
+  testWidgets('InspectoApp smoke test - initializes and renders SplashScreen',
+      (WidgetTester tester) async {
+    final apiRemoteDataSource = ApiRemoteDataSource();
+    final apiRepository = ApiRepositoryImpl(
+      remoteDataSource: apiRemoteDataSource,
+    );
+    final collectionRepository = CollectionRepositoryImpl();
+    final environmentRepository = EnvironmentRepositoryImpl();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => ThemeProvider()),
+          ChangeNotifierProvider(
+            create: (_) => RequestProvider(apiRepository: apiRepository),
+          ),
+          ChangeNotifierProvider(
+            create: (_) => CollectionProvider(repository: collectionRepository),
+          ),
+          ChangeNotifierProvider(
+            create: (_) =>
+                EnvironmentProvider(repository: environmentRepository),
+          ),
+        ],
+        child: const InspectoApp(),
+      ),
+    );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    expect(find.byType(SplashScreen), findsOneWidget);
+    expect(find.text('PROFESSIONAL API TOOLKIT'), findsOneWidget);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Advance past the splash timer and transition
+    await tester.pump(const Duration(milliseconds: 3600));
+    await tester.pump(const Duration(milliseconds: 1000));
   });
 }

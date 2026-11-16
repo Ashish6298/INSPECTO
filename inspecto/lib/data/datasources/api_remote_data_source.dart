@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../../core/config/api_config.dart';
 import '../models/api_request_model.dart';
 import '../../domain/entities/api_response.dart';
 
 class ApiRemoteDataSource {
-  final String baseUrl = 'http://10.0.2.2:3000/api';
+  final String baseUrl = ApiConfig.baseUrl;
 
   Future<ApiResponse> executeRequest(
       ApiRequestModel request, String? environmentId) async {
@@ -22,6 +23,17 @@ class ApiRemoteDataSource {
       final duration = endTime.difference(startTime).inMilliseconds;
 
       final data = jsonDecode(response.body);
+
+      // Handle backend errors (e.g., error: true)
+      if (data is Map && data['error'] == true) {
+        return ApiResponse(
+          statusCode: 500,
+          body: jsonEncode({'message': data['message'] ?? 'Unknown Error'}),
+          headers: {},
+          responseTimeMs: duration,
+          responseSize: response.bodyBytes.length,
+        );
+      }
 
       // The backend returns the execution result, which contains status, data (body), and headers
       return ApiResponse(

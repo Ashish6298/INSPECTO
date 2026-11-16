@@ -13,8 +13,11 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-        () => context.read<CollectionProvider>().loadCollections());
+    Future.microtask(() {
+      if (mounted) {
+        context.read<CollectionProvider>().loadCollections();
+      }
+    });
   }
 
   @override

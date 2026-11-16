@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../../core/config/api_config.dart';
 import '../../domain/entities/environment.dart';
 import '../../domain/repositories/environment_repository.dart';
 
 class EnvironmentRepositoryImpl implements EnvironmentRepository {
-  final String baseUrl = 'http://10.0.2.2:3000/api/environments';
+  final String baseUrl = '${ApiConfig.baseUrl}/environments';
 
   @override
   Future<List<Environment>> getEnvironments() async {

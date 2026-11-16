@@ -82,6 +82,33 @@ flutter run
 
 ---
 
+## 🗺️ Implementation Roadmap & Status
+
+Tracked from [phase.txt](../phase.txt):
+
+- **Milestone 1: Core Foundation & Stability Fixes**
+  - [x] **Phase 1.0**: Flutter Modernization & Compilation Error Resolution (0 errors, `flutter analyze` & `flutter test` passed)
+  - [ ] **Phase 1.1**: Express Backend CRUD Route & Controller Completion
+  - [ ] **Phase 1.2**: Environment Variable Schema & Execution Engine Alignment
+  - [ ] **Phase 1.3**: Connecting Unfinished Frontend Workflows & Fixing Controller Leaks
+- **Milestone 2: Essential Daily-Driver Features**
+  - [ ] **Phase 2.0**: cURL Importer & Multi-Language Code Snippet Generator
+  - [ ] **Phase 2.1**: Execution History & Recents Log with Quick Reload
+  - [ ] **Phase 2.2**: Advanced Response Viewer (Headers Table, Cookies, Multi-format)
+- **Milestone 3: Advanced Developer Power Tools**
+  - [ ] **Phase 3.0**: Dynamic Environment Chaining & Post-Response Variable Extraction
+  - [ ] **Phase 3.1**: Postman Collection & OpenAPI/Swagger Spec Importer
+  - [ ] **Phase 3.2**: Dual Execution Engine (Direct Client vs Backend Proxy)
+- **Milestone 4: Modern Protocols & Real-Time Streaming**
+  - [ ] **Phase 4.0**: Server-Sent Events (SSE) & LLM Streaming Response Viewer
+  - [ ] **Phase 4.1**: Interactive WebSocket Client (Real-time Frame Timeline)
+  - [ ] **Phase 4.2**: Dedicated GraphQL Query & Schema Explorer
+- **Milestone 5: Desktop Workspace & Platform Polish**
+  - [ ] **Phase 5.0**: Multi-Tab Request Workspace Management
+  - [ ] **Phase 5.1**: Desktop Responsive Multi-Pane Layout & Keyboard Shortcuts
+
+---
+
 ## 📝 License
 Proprietary tool designed for professional API debugging.
 

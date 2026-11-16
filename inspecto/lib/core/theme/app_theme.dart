@@ -38,7 +38,7 @@ class AppTheme {
       dividerColor: darkBorder,
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: darkBg,
-        indicatorColor: darkPrimary.withOpacity(0.1),
+        indicatorColor: darkPrimary.withValues(alpha: 0.1),
         labelTextStyle: WidgetStateProperty.all(
           const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF94A3B8)),
         ),
@@ -54,7 +54,7 @@ class AppTheme {
         centerTitle: false,
         titleTextStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: Colors.white),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: darkSurface,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -62,7 +62,7 @@ class AppTheme {
           side: const BorderSide(color: darkBorder, width: 1),
         ),
       ),
-      tabBarTheme: TabBarTheme(
+      tabBarTheme: TabBarThemeData(
         labelColor: darkPrimary,
         unselectedLabelColor: Colors.grey[600],
         indicatorColor: darkPrimary,
@@ -101,16 +101,16 @@ class AppTheme {
         titleTextStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: lightText),
         iconTheme: IconThemeData(color: lightText),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: lightSurface,
         elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.05),
+        shadowColor: Colors.black.withValues(alpha: 0.05),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: const BorderSide(color: lightBorder, width: 0.5),
         ),
       ),
-      tabBarTheme: TabBarTheme(
+      tabBarTheme: TabBarThemeData(
         labelColor: lightPrimary,
         unselectedLabelColor: lightTextSecondary,
         indicatorColor: lightPrimary,
