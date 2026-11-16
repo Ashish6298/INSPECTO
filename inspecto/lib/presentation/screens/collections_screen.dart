@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/collection_provider.dart';
+import '../providers/request_provider.dart';
 
 class CollectionsScreen extends StatefulWidget {
-  const CollectionsScreen({super.key});
+  final VoidCallback? onRequestTapped;
+  const CollectionsScreen({super.key, this.onRequestTapped});
 
   @override
   State<CollectionsScreen> createState() => _CollectionsScreenState();
@@ -53,7 +55,17 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
                             title: Text(request.url),
                             subtitle: Text(request.method.name),
                             onTap: () {
-                              // TODO: Load into RequestProvider
+                              context
+                                  .read<RequestProvider>()
+                                  .loadRequest(request);
+                              widget.onRequestTapped?.call();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                      'Loaded ${request.method.name} ${request.url}'),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
                             },
                           );
                         }).toList(),

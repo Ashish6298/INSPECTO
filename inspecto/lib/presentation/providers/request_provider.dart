@@ -130,6 +130,37 @@ class RequestProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void loadRequest(ApiRequest request) {
+    _method = request.method;
+    _url = request.url;
+    _headers = Map<String, String>.from(request.headers);
+    _params = Map<String, String>.from(request.params);
+    _body = request.body;
+    _bodyType = request.bodyType ?? 'none';
+    _bodySubType = request.bodySubType ?? 'json';
+    _authType = request.authType ?? 'none';
+    _authDetails = Map<String, dynamic>.from(request.authDetails ?? {});
+    _response = null;
+    _isLoading = false;
+    _isRefreshing = false;
+    notifyListeners();
+  }
+
+  ApiRequest getCurrentRequest({String? id}) {
+    return ApiRequest(
+      id: id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      method: _method,
+      url: _url,
+      headers: Map<String, String>.from(_headers),
+      params: Map<String, String>.from(_params),
+      body: _body,
+      bodyType: _bodyType,
+      bodySubType: _bodySubType,
+      authType: _authType,
+      authDetails: Map<String, dynamic>.from(_authDetails),
+    );
+  }
+
   bool validateUrl() {
     if (_url.isEmpty) return false;
     // Simple regex check for http/https

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/request_provider.dart';
+import '../providers/collection_provider.dart';
 import '../widgets/request_url_bar.dart';
 import '../widgets/request_tabs.dart';
 import '../widgets/response_viewer.dart';
@@ -44,9 +45,7 @@ class RequestScreen extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.bookmark_border_rounded),
-            onPressed: () {
-              // TODO: Save to collection
-            },
+            onPressed: () => _showSaveRequestDialog(context),
             tooltip: 'Save Request',
           ),
           const SizedBox(width: 8),
@@ -142,6 +141,193 @@ class RequestScreen extends StatelessWidget {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+    );
+  }
+
+  void _showSaveRequestDialog(BuildContext context) {
+    final requestProvider = context.read<RequestProvider>();
+    final collectionProvider = context.read<CollectionProvider>();
+
+    if (requestProvider.url.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a URL before saving the request'),
+        ),
+      );
+      return;
+    }
+
+    // Default request name from URL path or method
+    final uri = Uri.tryParse(requestProvider.url);
+    final defaultName = uri != null && uri.pathSegments.isNotEmpty
+        ? uri.pathSegments.last
+        : '${requestProvider.method.name} Request';
+
+    final nameController = TextEditingController(text: defaultName);
+    final newCollectionController = TextEditingController();
+
+    String? selectedCollectionId = collectionProvider.collections.isNotEmpty
+        ? collectionProvider.collections.first.id
+        : null;
+    bool isCreatingNewCollection = collectionProvider.collections.isEmpty;
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final collections = collectionProvider.collections;
+
+          return AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.bookmark_add_rounded, size: 22),
+                SizedBox(width: 8),
+                Text('Save to Collection',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Request Name',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey)),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      hintText: 'e.g. Get User Info',
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Collection',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey)),
+                  const SizedBox(height: 6),
+                  if (collections.isNotEmpty) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        borderRadius: BorderRadius.circular(8),
+                        border:
+                            Border.all(color: Theme.of(context).dividerColor),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: isCreatingNewCollection
+                              ? 'new'
+                              : selectedCollectionId,
+                          isExpanded: true,
+                          dropdownColor:
+                              Theme.of(context).colorScheme.surface,
+                          items: [
+                            ...collections.map((col) => DropdownMenuItem(
+                                  value: col.id,
+                                  child: Text(col.name,
+                                      overflow: TextOverflow.ellipsis),
+                                )),
+                            const DropdownMenuItem(
+                              value: 'new',
+                              child: Text('+ Create New Collection',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                            ),
+                          ],
+                          onChanged: (val) {
+                            setDialogState(() {
+                              if (val == 'new') {
+                                isCreatingNewCollection = true;
+                              } else {
+                                isCreatingNewCollection = false;
+                                selectedCollectionId = val;
+                              }
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  if (isCreatingNewCollection)
+                    TextField(
+                      controller: newCollectionController,
+                      decoration: const InputDecoration(
+                        hintText: 'New Collection Name',
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogCtx),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final reqName = nameController.text.trim().isEmpty
+                      ? defaultName
+                      : nameController.text.trim();
+                  String? targetCollectionId = selectedCollectionId;
+
+                  if (isCreatingNewCollection) {
+                    final newColName = newCollectionController.text.trim();
+                    if (newColName.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Please enter a collection name')),
+                      );
+                      return;
+                    }
+                    await collectionProvider.createCollection(newColName);
+                    final matched = collectionProvider.collections.firstWhere(
+                      (c) => c.name == newColName,
+                      orElse: () => collectionProvider.collections.last,
+                    );
+                    targetCollectionId = matched.id;
+                  }
+
+                  if (targetCollectionId == null) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('No collection selected')),
+                      );
+                    }
+                    return;
+                  }
+
+                  final requestToSave = requestProvider.getCurrentRequest();
+                  await collectionProvider.saveToCollection(
+                      targetCollectionId, requestToSave);
+
+                  if (dialogCtx.mounted) {
+                    Navigator.pop(dialogCtx);
+                  }
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text('Saved "$reqName" to collection')),
+                    );
+                  }
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 }

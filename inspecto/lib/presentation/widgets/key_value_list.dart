@@ -16,26 +16,94 @@ class KeyValueList extends StatefulWidget {
   State<KeyValueList> createState() => _KeyValueListState();
 }
 
+class _KeyValueRowControllers {
+  final TextEditingController keyController;
+  final TextEditingController valueController;
+
+  _KeyValueRowControllers({String key = '', String value = ''})
+      : keyController = TextEditingController(text: key),
+        valueController = TextEditingController(text: value);
+
+  void dispose() {
+    keyController.dispose();
+    valueController.dispose();
+  }
+}
+
 class _KeyValueListState extends State<KeyValueList> {
-  late List<MapEntry<String, String>> _items;
+  final List<_KeyValueRowControllers> _rowControllers = [];
 
   @override
   void initState() {
     super.initState();
-    _items = widget.data.entries.toList();
-    if (_items.isEmpty) {
-      _items.add(const MapEntry('', ''));
+    _initControllers();
+  }
+
+  void _initControllers() {
+    if (widget.data.isEmpty) {
+      _rowControllers.add(_KeyValueRowControllers());
+    } else {
+      widget.data.forEach((key, value) {
+        _rowControllers.add(_KeyValueRowControllers(key: key, value: value));
+      });
     }
+  }
+
+  @override
+  void didUpdateWidget(KeyValueList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_hasDataChanged(oldWidget.data, widget.data)) {
+      for (final row in _rowControllers) {
+        row.dispose();
+      }
+      _rowControllers.clear();
+      _initControllers();
+    }
+  }
+
+  bool _hasDataChanged(Map<String, String> oldData, Map<String, String> newData) {
+    if (oldData.length != newData.length) return true;
+    for (final entry in oldData.entries) {
+      if (newData[entry.key] != entry.value) return true;
+    }
+    return false;
   }
 
   void _updateData() {
     final newData = <String, String>{};
-    for (var item in _items) {
-      if (item.key.isNotEmpty) {
-        newData[item.key] = item.value;
+    for (final row in _rowControllers) {
+      final key = row.keyController.text.trim();
+      final val = row.valueController.text;
+      if (key.isNotEmpty) {
+        newData[key] = val;
       }
     }
     widget.onChanged(newData);
+  }
+
+  void _addRow() {
+    setState(() {
+      _rowControllers.add(_KeyValueRowControllers());
+    });
+  }
+
+  void _removeRow(int index) {
+    setState(() {
+      _rowControllers[index].dispose();
+      _rowControllers.removeAt(index);
+      if (_rowControllers.isEmpty) {
+        _rowControllers.add(_KeyValueRowControllers());
+      }
+      _updateData();
+    });
+  }
+
+  @override
+  void dispose() {
+    for (final row in _rowControllers) {
+      row.dispose();
+    }
+    super.dispose();
   }
 
   @override
@@ -44,9 +112,10 @@ class _KeyValueListState extends State<KeyValueList> {
       children: [
         Expanded(
           child: ListView.builder(
-            itemCount: _items.length,
+            itemCount: _rowControllers.length,
             padding: const EdgeInsets.all(16),
             itemBuilder: (context, index) {
+              final row = _rowControllers[index];
               return Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(4),
@@ -55,7 +124,9 @@ class _KeyValueListState extends State<KeyValueList> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: Theme.of(context).dividerColor,
-                    width: Theme.of(context).brightness == Brightness.dark ? 1.5 : 1.0,
+                    width: Theme.of(context).brightness == Brightness.dark
+                        ? 1.5
+                        : 1.0,
                   ),
                   boxShadow: Theme.of(context).brightness == Brightness.light
                       ? [
@@ -72,6 +143,7 @@ class _KeyValueListState extends State<KeyValueList> {
                     Expanded(
                       flex: 2,
                       child: TextField(
+                        controller: row.keyController,
                         style: TextStyle(
                             fontSize: 13,
                             fontFamily: 'monospace',
@@ -91,14 +163,7 @@ class _KeyValueListState extends State<KeyValueList> {
                           focusedBorder: InputBorder.none,
                           fillColor: Colors.transparent,
                         ),
-                        controller:
-                            TextEditingController(text: _items[index].key)
-                              ..selection = TextSelection.collapsed(
-                                  offset: _items[index].key.length),
-                        onChanged: (value) {
-                          _items[index] = MapEntry(value, _items[index].value);
-                          _updateData();
-                        },
+                        onChanged: (_) => _updateData(),
                       ),
                     ),
                     Container(
@@ -108,6 +173,7 @@ class _KeyValueListState extends State<KeyValueList> {
                     Expanded(
                       flex: 3,
                       child: TextField(
+                        controller: row.valueController,
                         style: TextStyle(
                             fontSize: 13,
                             fontFamily: 'monospace',
@@ -127,28 +193,13 @@ class _KeyValueListState extends State<KeyValueList> {
                           focusedBorder: InputBorder.none,
                           fillColor: Colors.transparent,
                         ),
-                        controller:
-                            TextEditingController(text: _items[index].value)
-                              ..selection = TextSelection.collapsed(
-                                  offset: _items[index].value.length),
-                        onChanged: (value) {
-                          _items[index] = MapEntry(_items[index].key, value);
-                          _updateData();
-                        },
+                        onChanged: (_) => _updateData(),
                       ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close_rounded,
                           color: Color(0xFFF38BA8), size: 18),
-                      onPressed: () {
-                        setState(() {
-                          _items.removeAt(index);
-                          if (_items.isEmpty) {
-                            _items.add(const MapEntry('', ''));
-                          }
-                          _updateData();
-                        });
-                      },
+                      onPressed: () => _removeRow(index),
                     ),
                   ],
                 ),
@@ -159,11 +210,7 @@ class _KeyValueListState extends State<KeyValueList> {
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: OutlinedButton.icon(
-            onPressed: () {
-              setState(() {
-                _items.add(const MapEntry('', ''));
-              });
-            },
+            onPressed: _addRow,
             icon: const Icon(Icons.add_rounded, size: 18),
             label: const Text('Add Row'),
             style: OutlinedButton.styleFrom(
