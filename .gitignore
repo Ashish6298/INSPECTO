@@ -44,3 +44,5 @@ backend/package-lock.json
 brain/
 .qodo/
 *.db
+report/
+phase.txt
