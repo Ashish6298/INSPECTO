@@ -35,11 +35,26 @@ class ApiRemoteDataSource {
         );
       }
 
-      // The backend returns the execution result, which contains status, data (body), and headers
+      // Safe header parsing: join multi-value list headers (e.g., set-cookie) with comma
+      final Map<String, String> headers = {};
+      if (data is Map && data['headers'] is Map) {
+        (data['headers'] as Map).forEach((k, v) {
+          headers[k.toString()] = v is List ? v.join(', ') : v.toString();
+        });
+      }
+
+      // Safe body normalization
+      String bodyStr = '';
+      if (data is Map && data['data'] != null) {
+        bodyStr = data['data'] is String
+            ? data['data'] as String
+            : jsonEncode(data['data']);
+      }
+
       return ApiResponse(
-        statusCode: data['status'] ?? 500,
-        body: jsonEncode(data['data']),
-        headers: Map<String, String>.from(data['headers'] ?? {}),
+        statusCode: data is Map ? (data['status'] ?? 500) : 500,
+        body: bodyStr,
+        headers: headers,
         responseTimeMs: duration,
         responseSize: response.bodyBytes.length,
       );

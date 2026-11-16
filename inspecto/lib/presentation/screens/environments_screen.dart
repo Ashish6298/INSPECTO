@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/environment_provider.dart';
+import '../providers/request_provider.dart';
 import '../widgets/key_value_list.dart';
 
 class EnvironmentsScreen extends StatefulWidget {
@@ -59,7 +60,11 @@ class _EnvironmentsScreenState extends State<EnvironmentsScreen> {
                     trailing: Switch(
                       value: provider.activeEnvironment?.id == env.id,
                       onChanged: (value) {
-                        provider.setActiveEnvironment(value ? env : null);
+                        final selected = value ? env : null;
+                        provider.setActiveEnvironment(selected);
+                        context
+                            .read<RequestProvider>()
+                            .setEnvironmentId(selected?.id);
                       },
                     ),
                     onTap: () => _showVariablesDialog(context, env),

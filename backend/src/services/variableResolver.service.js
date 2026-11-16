@@ -3,12 +3,29 @@
  */
 const resolveVariables = (inputString, variables) => {
   if (!inputString || typeof inputString !== 'string') return inputString;
-  
+  if (!variables) return inputString;
+
+  let varList = [];
+  if (Array.isArray(variables)) {
+    varList = variables;
+  } else if (typeof variables === 'object') {
+    varList = Object.entries(variables).map(([key, value]) => ({
+      key,
+      value: String(value),
+      enabled: true,
+    }));
+  }
+
   let resolvedString = inputString;
-  variables.forEach(variable => {
-    if (variable.enabled) {
-      const regex = new RegExp(`{{${variable.key}}}`, 'g');
-      resolvedString = resolvedString.replace(regex, variable.value);
+  varList.forEach((variable) => {
+    if (variable && variable.enabled !== false && variable.key) {
+      const escapedKey = variable.key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`{{${escapedKey}}}`, 'g');
+      const val =
+        variable.value !== undefined && variable.value !== null
+          ? String(variable.value)
+          : '';
+      resolvedString = resolvedString.replace(regex, val);
     }
   });
   return resolvedString;

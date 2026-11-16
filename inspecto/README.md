@@ -88,8 +88,8 @@ Tracked from [phase.txt](../phase.txt):
 
 - **Milestone 1: Core Foundation & Stability Fixes**
   - [x] **Phase 1.0**: Flutter Modernization & Compilation Error Resolution (0 errors, `flutter analyze` & `flutter test` passed)
-  - [ ] **Phase 1.1**: Express Backend CRUD Route & Controller Completion
-  - [ ] **Phase 1.2**: Environment Variable Schema & Execution Engine Alignment
+  - [x] **Phase 1.1**: Express Backend CRUD Route & Controller Completion (All 12 CRUD routes implemented & verified)
+  - [x] **Phase 1.2**: Environment Variable Schema & Execution Engine Alignment (Bidirectional Map/List sync, regex escaping, multi-value header parsing)
   - [ ] **Phase 1.3**: Connecting Unfinished Frontend Workflows & Fixing Controller Leaks
 - **Milestone 2: Essential Daily-Driver Features**
   - [ ] **Phase 2.0**: cURL Importer & Multi-Language Code Snippet Generator
