@@ -4,6 +4,7 @@ import '../providers/request_provider.dart';
 import 'key_value_list.dart';
 import 'request_body_editor.dart';
 import 'authorization_editor.dart';
+import 'post_request_tab.dart';
 
 class RequestTabs extends StatefulWidget {
   const RequestTabs({super.key});
@@ -19,7 +20,7 @@ class _RequestTabsState extends State<RequestTabs>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
@@ -31,6 +32,7 @@ class _RequestTabsState extends State<RequestTabs>
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<RequestProvider>();
+    final extractorCount = provider.extractors.length;
 
     return Column(
       children: [
@@ -39,11 +41,18 @@ class _RequestTabsState extends State<RequestTabs>
           labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
           unselectedLabelStyle: const TextStyle(fontSize: 12),
           indicatorColor: Theme.of(context).colorScheme.primary,
-          tabs: const [
-            Tab(text: 'Params'),
-            Tab(text: 'Auth'),
-            Tab(text: 'Headers'),
-            Tab(text: 'Body'),
+          isScrollable: true,
+          tabAlignment: TabAlignment.start,
+          tabs: [
+            const Tab(text: 'Params'),
+            const Tab(text: 'Auth'),
+            const Tab(text: 'Headers'),
+            const Tab(text: 'Body'),
+            Tab(
+              text: extractorCount > 0
+                  ? 'Extractors ($extractorCount)'
+                  : 'Extractors',
+            ),
           ],
         ),
         SizedBox(
@@ -63,6 +72,7 @@ class _RequestTabsState extends State<RequestTabs>
                 onChanged: provider.setHeaders,
               ),
               const RequestBodyEditor(),
+              const PostRequestTab(),
             ],
           ),
         ),

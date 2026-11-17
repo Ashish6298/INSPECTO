@@ -4,6 +4,7 @@ import '../providers/theme_provider.dart';
 import '../providers/request_provider.dart';
 import '../providers/collection_provider.dart';
 import '../providers/history_provider.dart';
+import '../providers/environment_provider.dart';
 import '../widgets/request_url_bar.dart';
 import '../widgets/request_tabs.dart';
 import '../widgets/response_viewer.dart';
@@ -144,9 +145,35 @@ class RequestScreen extends StatelessWidget {
           onPressed: requestProvider.validateUrl()
               ? () {
                   final historyProvider = context.read<HistoryProvider>();
+                  final envProvider = context.read<EnvironmentProvider>();
                   requestProvider.sendRequest(
+                    environmentProvider: envProvider,
                     onResponseReceived: (req, res) {
                       historyProvider.addEntry(request: req, response: res);
+                    },
+                    onVariableExtracted: (key, value) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                const Icon(Icons.check_circle_rounded,
+                                    color: Colors.white, size: 16),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Updated {{$key}} from response',
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            backgroundColor: const Color(0xFF10B981),
+                            duration: const Duration(seconds: 3),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
                     },
                   );
                 }

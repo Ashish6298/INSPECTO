@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/api_request.dart';
 import '../../domain/entities/api_response.dart';
+import '../../domain/entities/variable_extractor.dart';
 import '../../domain/repositories/api_repository.dart';
 import '../../data/repositories/api_repository_impl.dart';
+import 'environment_provider.dart';
 
 class RequestProvider with ChangeNotifier {
   final ApiRepository apiRepository;
@@ -18,6 +20,7 @@ class RequestProvider with ChangeNotifier {
   String _bodySubType = 'json';
   String _authType = 'none';
   Map<String, dynamic> _authDetails = {};
+  List<VariableExtractor> _extractors = [];
 
   ApiResponse? _response;
   bool _isLoading = false;
@@ -33,6 +36,7 @@ class RequestProvider with ChangeNotifier {
   String get bodySubType => _bodySubType;
   String get authType => _authType;
   Map<String, dynamic> get authDetails => _authDetails;
+  List<VariableExtractor> get extractors => _extractors;
   ApiResponse? get response => _response;
   bool get isLoading => _isLoading;
   bool get isRefreshing => _isRefreshing;
@@ -114,6 +118,30 @@ class RequestProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void addExtractor(VariableExtractor extractor) {
+    _extractors.add(extractor);
+    notifyListeners();
+  }
+
+  void updateExtractor(int index, VariableExtractor extractor) {
+    if (index >= 0 && index < _extractors.length) {
+      _extractors[index] = extractor;
+      notifyListeners();
+    }
+  }
+
+  void removeExtractor(int index) {
+    if (index >= 0 && index < _extractors.length) {
+      _extractors.removeAt(index);
+      notifyListeners();
+    }
+  }
+
+  void setExtractors(List<VariableExtractor> extractors) {
+    _extractors = List.from(extractors);
+    notifyListeners();
+  }
+
   void clearRequest() {
     _method = HttpMethod.GET;
     _url = '';
@@ -124,6 +152,7 @@ class RequestProvider with ChangeNotifier {
     _bodySubType = 'json';
     _authType = 'none';
     _authDetails = {};
+    _extractors = [];
     _response = null;
     _isLoading = false;
     _isRefreshing = false;
@@ -140,6 +169,7 @@ class RequestProvider with ChangeNotifier {
     _bodySubType = request.bodySubType ?? 'json';
     _authType = request.authType ?? 'none';
     _authDetails = Map<String, dynamic>.from(request.authDetails ?? {});
+    _extractors = List.from(request.extractors ?? []);
     _response = null;
     _isLoading = false;
     _isRefreshing = false;
@@ -158,6 +188,7 @@ class RequestProvider with ChangeNotifier {
       bodySubType: _bodySubType,
       authType: _authType,
       authDetails: Map<String, dynamic>.from(_authDetails),
+      extractors: List.from(_extractors),
     );
   }
 
@@ -178,7 +209,9 @@ class RequestProvider with ChangeNotifier {
   }
 
   Future<void> sendRequest({
+    EnvironmentProvider? environmentProvider,
     Function(ApiRequest request, ApiResponse response)? onResponseReceived,
+    Function(String variableName, String value)? onVariableExtracted,
   }) async {
     _isLoading = true;
     _response = null;
@@ -197,11 +230,39 @@ class RequestProvider with ChangeNotifier {
         bodySubType: _bodySubType,
         authType: _authType,
         authDetails: _authDetails,
+        extractors: List.from(_extractors),
       );
       executedRequest = request;
 
       _response = await (apiRepository as ApiRepositoryImpl)
           .executeWithEnvironment(request, _environmentId);
+
+      // Evaluate post-response variable extractors if request succeeded
+      if (_response != null &&
+          _response!.statusCode >= 200 &&
+          _response!.statusCode < 300 &&
+          environmentProvider != null &&
+          environmentProvider.activeEnvironment != null) {
+        for (final extractor in _extractors) {
+          if (extractor.enabled &&
+              extractor.targetVariable.trim().isNotEmpty &&
+              extractor.pathOrKey.trim().isNotEmpty) {
+            final extracted =
+                VariableExtractor.extractFromResponse(extractor, _response!);
+            if (extracted != null && extracted.isNotEmpty) {
+              final cleanKey = extractor.targetVariable
+                  .replaceAll(RegExp(r'[{}]'), '')
+                  .trim();
+              await environmentProvider.updateVariable(
+                environmentProvider.activeEnvironment!.id,
+                cleanKey,
+                extracted,
+              );
+              onVariableExtracted?.call(cleanKey, extracted);
+            }
+          }
+        }
+      }
     } catch (e) {
       _response = ApiResponse(
         statusCode: 500,

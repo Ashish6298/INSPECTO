@@ -96,8 +96,8 @@ Tracked from [phase.txt](phase.txt):
   - [x] **Phase 2.1**: Execution History & Recents Log with Quick Reload (Local persistence, history screen, reload & clear)
   - [x] **Phase 2.2**: Advanced Response Viewer (Sub-tabs: Body, Headers, Cookies, Raw; Search & Pretty Print; Cookie attributes)
 - **Milestone 3: Advanced Developer Power Tools**
-  - [ ] **Phase 3.0**: Dynamic Environment Chaining & Post-Response Variable Extraction
-  - [ ] **Phase 3.1**: Postman Collection & OpenAPI/Swagger Spec Importer
+  - [x] **Phase 3.0**: Dynamic Environment Chaining & Post-Response Variable Extraction (JSONPath body and header extraction rules, live chaining into active environment)
+  - [x] **Phase 3.1**: Postman Collection & OpenAPI/Swagger Spec Importer (Postman v2.1 & OpenAPI 3.0 JSON parsers, direct collection persistence)
   - [ ] **Phase 3.2**: Dual Execution Engine (Direct Client vs Backend Proxy)
 - **Milestone 4: Modern Protocols & Real-Time Streaming**
   - [ ] **Phase 4.0**: Server-Sent Events (SSE) & LLM Streaming Response Viewer

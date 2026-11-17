@@ -27,8 +27,27 @@ class CollectionProvider with ChangeNotifier {
     await loadCollections();
   }
 
-  Future<void> createCollection(String name) async {
-    await repository.createCollection(name);
+  Future<String?> createCollection(String name) async {
+    final id = await repository.createCollection(name);
     await loadCollections();
+    return id;
+  }
+
+  Future<void> importCollection(
+      String name, List<ApiRequest> requests) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final colId = await repository.createCollection(name);
+      if (colId != null) {
+        for (final req in requests) {
+          await repository.saveRequestToCollection(colId, req);
+        }
+      }
+    } finally {
+      await loadCollections();
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 }

@@ -1,3 +1,5 @@
+import 'variable_extractor.dart';
+
 // ignore: constant_identifier_names
 enum HttpMethod { GET, POST, PUT, DELETE, PATCH }
 
@@ -12,6 +14,7 @@ class ApiRequest {
   final String? bodySubType; // 'text', 'json', 'javascript', 'html', 'xml'
   final String? authType; // 'none', 'basic', 'bearer', 'apiKey'
   final Map<String, dynamic>? authDetails;
+  final List<VariableExtractor>? extractors;
 
   ApiRequest({
     required this.id,
@@ -24,5 +27,6 @@ class ApiRequest {
     this.bodySubType = 'json',
     this.authType = 'none',
     this.authDetails = const {},
+    this.extractors = const [],
   });
 }

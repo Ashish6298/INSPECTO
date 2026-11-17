@@ -121,11 +121,18 @@ class CollectionRepositoryImpl implements CollectionRepository {
   }
 
   @override
-  Future<void> createCollection(String name) async {
-    await http.post(
+  Future<String?> createCollection(String name) async {
+    final response = await http.post(
       Uri.parse(baseUrl),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'name': name}),
     );
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      final dynamic data = jsonDecode(response.body);
+      if (data is Map) {
+        return data['_id']?.toString() ?? data['id']?.toString();
+      }
+    }
+    return null;
   }
 }
