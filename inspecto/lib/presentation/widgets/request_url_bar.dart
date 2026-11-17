@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../domain/entities/api_request.dart';
+import '../../domain/entities/execution_engine.dart';
 import '../providers/request_provider.dart';
 import '../providers/environment_provider.dart';
 
@@ -18,6 +19,7 @@ class RequestUrlBar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               if (envProvider.activeEnvironment != null)
                 Container(
@@ -26,8 +28,8 @@ class RequestUrlBar extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: const Color(0xFFCBA6F7).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
-                    border:
-                        Border.all(color: const Color(0xFFCBA6F7).withValues(alpha: 0.3)),
+                    border: Border.all(
+                        color: const Color(0xFFCBA6F7).withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -44,7 +46,16 @@ class RequestUrlBar extends StatelessWidget {
                       ),
                     ],
                   ),
-                ),
+                )
+              else
+                const SizedBox.shrink(),
+
+              // Execution Engine Switcher Chip (Direct vs Proxy)
+              _EngineToggleChip(
+                engine: provider.executionEngine,
+                onChanged: (newEngine) =>
+                    provider.setExecutionEngine(newEngine),
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -154,5 +165,61 @@ class _MethodDropdown extends StatelessWidget {
       case HttpMethod.PATCH:
         return const Color(0xFF8B5CF6); // Violet
     }
+  }
+}
+
+class _EngineToggleChip extends StatelessWidget {
+  final ExecutionEngine engine;
+  final ValueChanged<ExecutionEngine> onChanged;
+
+  const _EngineToggleChip({
+    required this.engine,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDirect = engine == ExecutionEngine.direct;
+    final color = isDirect ? const Color(0xFF06B6D4) : const Color(0xFF8B5CF6);
+    final label = isDirect ? 'Direct (Local)' : 'Proxy (Server)';
+    final icon = isDirect ? Icons.bolt_rounded : Icons.dns_rounded;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () {
+          onChanged(
+            isDirect ? ExecutionEngine.proxy : ExecutionEngine.direct,
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: color.withValues(alpha: 0.35)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 13, color: color),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+              const SizedBox(width: 3),
+              Icon(Icons.swap_horiz_rounded,
+                  size: 12, color: color.withValues(alpha: 0.7)),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

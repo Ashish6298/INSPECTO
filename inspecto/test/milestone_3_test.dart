@@ -1,13 +1,31 @@
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
 import 'package:inspecto/domain/entities/api_request.dart';
 import 'package:inspecto/domain/entities/api_response.dart';
 import 'package:inspecto/domain/entities/environment.dart';
+import 'package:inspecto/domain/entities/execution_engine.dart';
 import 'package:inspecto/domain/entities/variable_extractor.dart';
 import 'package:inspecto/core/utils/postman_importer.dart';
 import 'package:inspecto/core/utils/openapi_importer.dart';
+import 'package:inspecto/data/datasources/api_direct_data_source.dart';
+import 'package:inspecto/data/datasources/api_remote_data_source.dart';
+import 'package:inspecto/data/models/api_request_model.dart';
+import 'package:inspecto/data/repositories/api_repository_impl.dart';
 import 'package:inspecto/domain/repositories/environment_repository.dart';
 import 'package:inspecto/presentation/providers/environment_provider.dart';
+import 'package:inspecto/presentation/providers/request_provider.dart';
+
+class MockHttpClient extends http.BaseClient {
+  final Future<http.StreamedResponse> Function(http.BaseRequest request) handler;
+
+  MockHttpClient(this.handler);
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) {
+    return handler(request);
+  }
+}
 
 class MockEnvironmentRepository implements EnvironmentRepository {
   final Map<String, Environment> envs = {};
@@ -346,6 +364,133 @@ void main() {
       final deleteReq = imported.requests.firstWhere(
           (r) => r.method == HttpMethod.DELETE);
       expect(deleteReq.url, equals('https://api.petstore.io/v2/pets/{{petId}}'));
+    });
+  });
+
+  group('Phase 3.2: Dual Execution Engine Tests', () {
+    test('ApiDirectDataSource executes directly, resolves variables, and calculates latency', () async {
+      String? requestedUrl;
+      String? authHeader;
+      String? sentBody;
+
+      final mockClient = MockHttpClient((request) async {
+        requestedUrl = request.url.toString();
+        authHeader = request.headers['Authorization'];
+        if (request is http.Request) {
+          sentBody = request.body;
+        }
+
+        return http.StreamedResponse(
+          Stream.value(utf8.encode('{"success":true,"client":"direct"}')),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      });
+
+      final directDataSource = ApiDirectDataSource(client: mockClient);
+      final reqModel = ApiRequestModel(
+        id: 'req_direct_1',
+        method: HttpMethod.POST,
+        url: '{{baseUrl}}/api/items',
+        headers: {'X-Custom': '{{customHeader}}'},
+        params: {'filter': '{{filterVal}}'},
+        body: '{"name":"{{itemName}}"}',
+        bodyType: 'json',
+        authType: 'bearer',
+        authDetails: {'token': '{{secretToken}}'},
+      );
+
+      final envVars = {
+        'baseUrl': 'http://localhost:8080',
+        'customHeader': 'InspectoLocal',
+        'filterVal': 'active',
+        'itemName': 'Widget A',
+        'secretToken': 'direct_jwt_xyz',
+      };
+
+      final response = await directDataSource.executeRequest(
+        reqModel,
+        environmentVariables: envVars,
+      );
+
+      expect(requestedUrl, equals('http://localhost:8080/api/items?filter=active'));
+      expect(authHeader, equals('Bearer direct_jwt_xyz'));
+      expect(sentBody, equals('{"name":"Widget A"}'));
+      expect(response.statusCode, equals(200));
+      expect(response.body, contains('"success":true'));
+      expect(response.headers['content-type'], equals('application/json'));
+      expect(response.responseTimeMs, greaterThanOrEqualTo(0));
+      expect(response.responseSize, greaterThan(0));
+    });
+
+    test('ApiRepositoryImpl routes to direct or remote data source based on engine', () async {
+      bool directCalled = false;
+
+      final mockClient = MockHttpClient((request) async {
+        directCalled = true;
+        return http.StreamedResponse(
+          Stream.value(utf8.encode('{"engine":"direct"}')),
+          200,
+        );
+      });
+
+      final directDataSource = ApiDirectDataSource(client: mockClient);
+      final remoteDataSource = ApiRemoteDataSource();
+
+      final repository = ApiRepositoryImpl(
+        remoteDataSource: remoteDataSource,
+        directDataSource: directDataSource,
+      );
+
+      final req = ApiRequest(
+        id: '1',
+        method: HttpMethod.GET,
+        url: 'http://localhost:3000/ping',
+        headers: {},
+        params: {},
+      );
+
+      // 1. Direct Engine Call
+      final resDirect = await repository.executeWithEnvironment(
+        req,
+        null,
+        engine: ExecutionEngine.direct,
+      );
+      expect(directCalled, isTrue);
+      expect(resDirect.body, contains('direct'));
+
+      // 2. Proxy Engine Call (will attempt remoteDataSource executeRequest)
+      // Remote call will fail gracefully with network error without a running backend
+      final resProxy = await repository.executeWithEnvironment(
+        req,
+        'env_id',
+        engine: ExecutionEngine.proxy,
+      );
+      expect(resProxy.statusCode, equals(500));
+    });
+
+    test('RequestProvider toggles executionEngine and notifies listeners', () {
+      final repo = ApiRepositoryImpl(
+        remoteDataSource: ApiRemoteDataSource(),
+        directDataSource: ApiDirectDataSource(
+          client: MockHttpClient((req) async =>
+              http.StreamedResponse(Stream.value([]), 200)),
+        ),
+      );
+      final provider = RequestProvider(apiRepository: repo);
+
+      expect(provider.executionEngine, equals(ExecutionEngine.direct));
+
+      int notifications = 0;
+      provider.addListener(() => notifications++);
+
+      provider.setExecutionEngine(ExecutionEngine.proxy);
+      expect(provider.executionEngine, equals(ExecutionEngine.proxy));
+      expect(notifications, equals(1));
+
+      provider.setExecutionEngine(ExecutionEngine.direct);
+      expect(provider.executionEngine, equals(ExecutionEngine.direct));
+      expect(notifications, equals(2));
     });
   });
 }

@@ -98,7 +98,7 @@ Tracked from [phase.txt](phase.txt):
 - **Milestone 3: Advanced Developer Power Tools**
   - [x] **Phase 3.0**: Dynamic Environment Chaining & Post-Response Variable Extraction (JSONPath body and header extraction rules, live chaining into active environment)
   - [x] **Phase 3.1**: Postman Collection & OpenAPI/Swagger Spec Importer (Postman v2.1 & OpenAPI 3.0 JSON parsers, direct collection persistence)
-  - [ ] **Phase 3.2**: Dual Execution Engine (Direct Client vs Backend Proxy)
+  - [x] **Phase 3.2**: Dual Execution Engine (Direct Client vs Backend Proxy with UI engine toggle and local variable interpolation)
 - **Milestone 4: Modern Protocols & Real-Time Streaming**
   - [ ] **Phase 4.0**: Server-Sent Events (SSE) & LLM Streaming Response Viewer
   - [ ] **Phase 4.1**: Interactive WebSocket Client (Real-time Frame Timeline)

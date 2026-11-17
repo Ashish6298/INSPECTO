@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/api_request.dart';
 import '../../domain/entities/api_response.dart';
+import '../../domain/entities/execution_engine.dart';
 import '../../domain/entities/variable_extractor.dart';
 import '../../domain/repositories/api_repository.dart';
 import '../../data/repositories/api_repository_impl.dart';
@@ -21,6 +22,7 @@ class RequestProvider with ChangeNotifier {
   String _authType = 'none';
   Map<String, dynamic> _authDetails = {};
   List<VariableExtractor> _extractors = [];
+  ExecutionEngine _executionEngine = ExecutionEngine.direct;
 
   ApiResponse? _response;
   bool _isLoading = false;
@@ -37,11 +39,17 @@ class RequestProvider with ChangeNotifier {
   String get authType => _authType;
   Map<String, dynamic> get authDetails => _authDetails;
   List<VariableExtractor> get extractors => _extractors;
+  ExecutionEngine get executionEngine => _executionEngine;
   ApiResponse? get response => _response;
   bool get isLoading => _isLoading;
   bool get isRefreshing => _isRefreshing;
 
   // Setters
+  void setExecutionEngine(ExecutionEngine engine) {
+    _executionEngine = engine;
+    notifyListeners();
+  }
+
   void setMethod(HttpMethod method) {
     _method = method;
     notifyListeners();
@@ -234,8 +242,14 @@ class RequestProvider with ChangeNotifier {
       );
       executedRequest = request;
 
+      final activeEnv = environmentProvider?.activeEnvironment;
       _response = await (apiRepository as ApiRepositoryImpl)
-          .executeWithEnvironment(request, _environmentId);
+          .executeWithEnvironment(
+        request,
+        _environmentId ?? activeEnv?.id,
+        engine: _executionEngine,
+        environmentVariables: activeEnv?.variables,
+      );
 
       // Evaluate post-response variable extractors if request succeeded
       if (_response != null &&
