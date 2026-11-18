@@ -6,11 +6,13 @@ import 'presentation/providers/collection_provider.dart';
 import 'presentation/providers/environment_provider.dart';
 import 'presentation/providers/history_provider.dart';
 import 'presentation/providers/theme_provider.dart';
+import 'presentation/providers/websocket_provider.dart';
 import 'data/repositories/api_repository_impl.dart';
 import 'data/repositories/collection_repository_impl.dart';
 import 'data/repositories/environment_repository_impl.dart';
 import 'data/datasources/api_remote_data_source.dart';
 import 'data/datasources/history_local_data_source.dart';
+import 'data/datasources/websocket_data_source.dart';
 import 'presentation/screens/splash_screen.dart';
 
 void main() {
@@ -21,6 +23,7 @@ void main() {
   final collectionRepository = CollectionRepositoryImpl();
   final environmentRepository = EnvironmentRepositoryImpl();
   final historyLocalDataSource = HistoryLocalDataSource();
+  final webSocketDataSource = WebSocketDataSource();
 
   runApp(
     MultiProvider(
@@ -38,6 +41,10 @@ void main() {
         ChangeNotifierProvider(
           create: (_) =>
               HistoryProvider(dataSource: historyLocalDataSource),
+        ),
+        ChangeNotifierProvider(
+          create: (_) =>
+              WebSocketProvider(dataSource: webSocketDataSource),
         ),
       ],
       child: const InspectoApp(),

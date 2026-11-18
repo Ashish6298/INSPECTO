@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../domain/entities/api_request.dart';
 import '../../domain/entities/api_response.dart';
@@ -5,6 +6,7 @@ import '../../domain/entities/execution_engine.dart';
 import '../../domain/entities/variable_extractor.dart';
 import '../../domain/repositories/api_repository.dart';
 import '../../data/repositories/api_repository_impl.dart';
+import '../../data/datasources/sse_stream_data_source.dart';
 import 'environment_provider.dart';
 
 class RequestProvider with ChangeNotifier {
@@ -23,6 +25,15 @@ class RequestProvider with ChangeNotifier {
   Map<String, dynamic> _authDetails = {};
   List<VariableExtractor> _extractors = [];
   ExecutionEngine _executionEngine = ExecutionEngine.direct;
+  bool _isStreaming = false;
+  bool _isStreamMode = false;
+  String _streamedText = '';
+  String _rawStreamLog = '';
+  int _streamChunks = 0;
+  int _streamElapsedMs = 0;
+  StreamSubscription<SseEvent>? _streamSubscription;
+  Timer? _streamTimer;
+  SseStreamDataSource? sseDataSource;
 
   ApiResponse? _response;
   bool _isLoading = false;
@@ -40,11 +51,22 @@ class RequestProvider with ChangeNotifier {
   Map<String, dynamic> get authDetails => _authDetails;
   List<VariableExtractor> get extractors => _extractors;
   ExecutionEngine get executionEngine => _executionEngine;
+  bool get isStreaming => _isStreaming;
+  bool get isStreamMode => _isStreamMode;
+  String get streamedText => _streamedText;
+  String get rawStreamLog => _rawStreamLog;
+  int get streamChunks => _streamChunks;
+  int get streamElapsedMs => _streamElapsedMs;
   ApiResponse? get response => _response;
   bool get isLoading => _isLoading;
   bool get isRefreshing => _isRefreshing;
 
   // Setters
+  void setStreamMode(bool enabled) {
+    _isStreamMode = enabled;
+    notifyListeners();
+  }
+
   void setExecutionEngine(ExecutionEngine engine) {
     _executionEngine = engine;
     notifyListeners();
@@ -216,11 +238,29 @@ class RequestProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool _isEventStreamRequest() {
+    for (final entry in _headers.entries) {
+      if (entry.key.toLowerCase() == 'accept' &&
+          entry.value.toLowerCase().contains('text/event-stream')) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   Future<void> sendRequest({
     EnvironmentProvider? environmentProvider,
     Function(ApiRequest request, ApiResponse response)? onResponseReceived,
     Function(String variableName, String value)? onVariableExtracted,
   }) async {
+    if (_isStreamMode || _isEventStreamRequest()) {
+      return sendStreamRequest(
+        environmentProvider: environmentProvider,
+        onResponseReceived: onResponseReceived,
+        onVariableExtracted: onVariableExtracted,
+      );
+    }
+
     _isLoading = true;
     _response = null;
     notifyListeners();
@@ -292,5 +332,122 @@ class RequestProvider with ChangeNotifier {
         onResponseReceived?.call(executedRequest, _response!);
       }
     }
+  }
+
+  Future<void> sendStreamRequest({
+    EnvironmentProvider? environmentProvider,
+    Function(ApiRequest request, ApiResponse response)? onResponseReceived,
+    Function(String variableName, String value)? onVariableExtracted,
+  }) async {
+    _isLoading = true;
+    _isStreaming = true;
+    _response = null;
+    _streamedText = '';
+    _rawStreamLog = '';
+    _streamChunks = 0;
+    _streamElapsedMs = 0;
+    notifyListeners();
+
+    final stopwatch = Stopwatch()..start();
+    _streamTimer?.cancel();
+    _streamTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      _streamElapsedMs = stopwatch.elapsedMilliseconds;
+      notifyListeners();
+    });
+
+    ApiRequest? executedRequest;
+    try {
+      final request = ApiRequest(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        method: _method,
+        url: _url,
+        headers: _headers,
+        params: _params,
+        body: _body,
+        bodyType: _bodyType,
+        bodySubType: _bodySubType,
+        authType: _authType,
+        authDetails: _authDetails,
+        extractors: List.from(_extractors),
+      );
+      executedRequest = request;
+
+      _isLoading = false;
+      notifyListeners();
+
+      final sseSource = sseDataSource ?? SseStreamDataSource();
+      final activeEnv = environmentProvider?.activeEnvironment;
+
+      final stream = sseSource.streamRequest(
+        request,
+        environmentVariables: activeEnv?.variables,
+      );
+
+      final completer = Completer<void>();
+      _streamSubscription = stream.listen(
+        (event) {
+          _streamChunks++;
+          final delta = SseStreamDataSource.extractLlmDelta(event.data);
+          _streamedText += delta;
+          _rawStreamLog +=
+              'event: ${event.event ?? "message"}\ndata: ${event.data}\n\n';
+          notifyListeners();
+          if (event.isDone) {
+            if (!completer.isCompleted) completer.complete();
+          }
+        },
+        onError: (err) {
+          _rawStreamLog += '\n[Stream Error]: $err\n';
+          if (!completer.isCompleted) completer.complete();
+        },
+        onDone: () {
+          if (!completer.isCompleted) completer.complete();
+        },
+        cancelOnError: true,
+      );
+
+      await completer.future;
+    } catch (e) {
+      _rawStreamLog += '\n[Request Error]: $e\n';
+    } finally {
+      stopwatch.stop();
+      _streamElapsedMs = stopwatch.elapsedMilliseconds;
+      _streamTimer?.cancel();
+      _streamTimer = null;
+      _streamSubscription?.cancel();
+      _streamSubscription = null;
+      _isStreaming = false;
+
+      _response = ApiResponse(
+        statusCode: 200,
+        body: _streamedText.isNotEmpty ? _streamedText : _rawStreamLog,
+        headers: {'content-type': 'text/event-stream'},
+        responseTimeMs: _streamElapsedMs,
+        responseSize: _streamedText.length,
+      );
+      _isLoading = false;
+      notifyListeners();
+
+      if (executedRequest != null && _response != null) {
+        onResponseReceived?.call(executedRequest, _response!);
+      }
+    }
+  }
+
+  void stopStream() {
+    _streamSubscription?.cancel();
+    _streamSubscription = null;
+    _streamTimer?.cancel();
+    _streamTimer = null;
+    _isStreaming = false;
+
+    _response ??= ApiResponse(
+      statusCode: 200,
+      body: _streamedText.isNotEmpty ? _streamedText : _rawStreamLog,
+      headers: {'content-type': 'text/event-stream'},
+      responseTimeMs: _streamElapsedMs,
+      responseSize: _streamedText.length,
+    );
+    notifyListeners();
   }
 }

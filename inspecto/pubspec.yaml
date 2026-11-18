@@ -43,6 +43,7 @@ dependencies:
   json_annotation: ^4.9.0
   flutter_animate: ^4.5.2
   shared_preferences: ^2.5.2
+  web_socket_channel: ^3.0.3
 
 dev_dependencies:
   flutter_test:

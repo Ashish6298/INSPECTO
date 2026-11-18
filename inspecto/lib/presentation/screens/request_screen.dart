@@ -8,6 +8,7 @@ import '../providers/environment_provider.dart';
 import '../widgets/request_url_bar.dart';
 import '../widgets/request_tabs.dart';
 import '../widgets/response_viewer.dart';
+import '../widgets/streaming_response_viewer.dart';
 import '../widgets/curl_import_dialog.dart';
 import '../widgets/code_snippet_dialog.dart';
 
@@ -84,15 +85,20 @@ class RequestScreen extends StatelessWidget {
                     child: Column(
                       children: [
                         const RequestTabs(),
-                        if (requestProvider.response != null)
+                        if (requestProvider.isStreaming)
+                          const StreamingResponseViewer(),
+                        if (requestProvider.response != null &&
+                            !requestProvider.isStreaming)
                           const ResponseViewer(),
-                        if (requestProvider.isLoading)
+                        if (requestProvider.isLoading &&
+                            !requestProvider.isStreaming)
                           const Padding(
                             padding: EdgeInsets.all(32.0),
                             child: CircularProgressIndicator(),
                           ),
                         if (requestProvider.response == null &&
-                            !requestProvider.isLoading)
+                            !requestProvider.isLoading &&
+                            !requestProvider.isStreaming)
                           _EmptyRequestState(),
                       ],
                     ),

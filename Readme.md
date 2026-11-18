@@ -100,8 +100,8 @@ Tracked from [phase.txt](phase.txt):
   - [x] **Phase 3.1**: Postman Collection & OpenAPI/Swagger Spec Importer (Postman v2.1 & OpenAPI 3.0 JSON parsers, direct collection persistence)
   - [x] **Phase 3.2**: Dual Execution Engine (Direct Client vs Backend Proxy with UI engine toggle and local variable interpolation)
 - **Milestone 4: Modern Protocols & Real-Time Streaming**
-  - [ ] **Phase 4.0**: Server-Sent Events (SSE) & LLM Streaming Response Viewer
-  - [ ] **Phase 4.1**: Interactive WebSocket Client (Real-time Frame Timeline)
+  - [x] **Phase 4.0**: Server-Sent Events (SSE) & LLM Streaming Response Viewer (Real-time delta tokens, stop stream, auto-scroll, tokens/sec metrics)
+  - [x] **Phase 4.1**: Interactive WebSocket Client (Real-time Frame Timeline, echo testing, inbound/outbound filters, preset composer)
   - [ ] **Phase 4.2**: Dedicated GraphQL Query & Schema Explorer
 - **Milestone 5: Desktop Workspace & Platform Polish**
   - [ ] **Phase 5.0**: Multi-Tab Request Workspace Management
