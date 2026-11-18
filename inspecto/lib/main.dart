@@ -7,6 +7,7 @@ import 'presentation/providers/environment_provider.dart';
 import 'presentation/providers/history_provider.dart';
 import 'presentation/providers/theme_provider.dart';
 import 'presentation/providers/websocket_provider.dart';
+import 'presentation/providers/workspace_provider.dart';
 import 'data/repositories/api_repository_impl.dart';
 import 'data/repositories/collection_repository_impl.dart';
 import 'data/repositories/environment_repository_impl.dart';
@@ -46,6 +47,7 @@ void main() {
           create: (_) =>
               WebSocketProvider(dataSource: webSocketDataSource),
         ),
+        ChangeNotifierProvider(create: (_) => WorkspaceProvider()),
       ],
       child: const InspectoApp(),
     ),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/history_provider.dart';
 import '../providers/request_provider.dart';
+import '../providers/workspace_provider.dart';
 import '../../domain/entities/api_request.dart';
 import '../../domain/entities/history_item.dart';
 
@@ -195,7 +196,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: () {
-            context.read<RequestProvider>().loadRequest(item.request);
+            context.read<WorkspaceProvider>().openRequest(
+                  item.request,
+                  requestProvider: context.read<RequestProvider>(),
+                );
             widget.onRequestTapped?.call();
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

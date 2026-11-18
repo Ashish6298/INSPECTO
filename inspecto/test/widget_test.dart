@@ -11,6 +11,9 @@ import 'package:inspecto/data/repositories/collection_repository_impl.dart';
 import 'package:inspecto/data/repositories/environment_repository_impl.dart';
 import 'package:inspecto/data/datasources/api_remote_data_source.dart';
 import 'package:inspecto/data/datasources/history_local_data_source.dart';
+import 'package:inspecto/data/datasources/websocket_data_source.dart';
+import 'package:inspecto/presentation/providers/websocket_provider.dart';
+import 'package:inspecto/presentation/providers/workspace_provider.dart';
 import 'package:inspecto/presentation/screens/splash_screen.dart';
 
 void main() {
@@ -42,6 +45,11 @@ void main() {
             create: (_) =>
                 HistoryProvider(dataSource: historyLocalDataSource),
           ),
+          ChangeNotifierProvider(
+            create: (_) =>
+                WebSocketProvider(dataSource: WebSocketDataSource()),
+          ),
+          ChangeNotifierProvider(create: (_) => WorkspaceProvider()),
         ],
         child: const InspectoApp(),
       ),

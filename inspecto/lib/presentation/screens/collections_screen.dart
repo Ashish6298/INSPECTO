@@ -4,6 +4,7 @@ import '../../core/utils/postman_importer.dart';
 import '../../core/utils/openapi_importer.dart';
 import '../providers/collection_provider.dart';
 import '../providers/request_provider.dart';
+import '../providers/workspace_provider.dart';
 
 class CollectionsScreen extends StatefulWidget {
   final VoidCallback? onRequestTapped;
@@ -63,9 +64,11 @@ class _CollectionsScreenState extends State<CollectionsScreen> {
                             title: Text(request.url),
                             subtitle: Text(request.method.name),
                             onTap: () {
-                              context
-                                  .read<RequestProvider>()
-                                  .loadRequest(request);
+                              context.read<WorkspaceProvider>().openRequest(
+                                    request,
+                                    requestProvider:
+                                        context.read<RequestProvider>(),
+                                  );
                               widget.onRequestTapped?.call();
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'desktop_main_screen.dart';
 import 'request_screen.dart';
 import 'websocket_screen.dart';
 import 'history_screen.dart';
@@ -33,38 +34,46 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _screens[_selectedIndex],
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.send_rounded),
-            label: 'Request',
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth > 900) {
+          return const DesktopMainScreen();
+        }
+
+        return Scaffold(
+          body: _screens[_selectedIndex],
+          bottomNavigationBar: NavigationBar(
+            selectedIndex: _selectedIndex,
+            onDestinationSelected: (index) {
+              setState(() {
+                _selectedIndex = index;
+              });
+            },
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.send_rounded),
+                label: 'Request',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.cable_rounded),
+                label: 'WebSocket',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.history_rounded),
+                label: 'History',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.folder_rounded),
+                label: 'Collections',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.settings_input_component_rounded),
+                label: 'Environments',
+              ),
+            ],
           ),
-          NavigationDestination(
-            icon: Icon(Icons.cable_rounded),
-            label: 'WebSocket',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.history_rounded),
-            label: 'History',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.folder_rounded),
-            label: 'Collections',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings_input_component_rounded),
-            label: 'Environments',
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

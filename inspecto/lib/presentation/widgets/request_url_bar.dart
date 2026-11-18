@@ -6,7 +6,8 @@ import '../providers/request_provider.dart';
 import '../providers/environment_provider.dart';
 
 class RequestUrlBar extends StatelessWidget {
-  const RequestUrlBar({super.key});
+  final FocusNode? focusNode;
+  const RequestUrlBar({super.key, this.focusNode});
 
   @override
   Widget build(BuildContext context) {
@@ -88,6 +89,7 @@ class RequestUrlBar extends StatelessWidget {
                     color: Theme.of(context).dividerColor),
                 Expanded(
                   child: TextField(
+                    focusNode: focusNode,
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w500,

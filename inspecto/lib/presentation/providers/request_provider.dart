@@ -190,6 +190,10 @@ class RequestProvider with ChangeNotifier {
   }
 
   void loadRequest(ApiRequest request) {
+    loadRequestWithResponse(request, null);
+  }
+
+  void loadRequestWithResponse(ApiRequest request, ApiResponse? response) {
     _method = request.method;
     _url = request.url;
     _headers = Map<String, String>.from(request.headers);
@@ -200,7 +204,7 @@ class RequestProvider with ChangeNotifier {
     _authType = request.authType ?? 'none';
     _authDetails = Map<String, dynamic>.from(request.authDetails ?? {});
     _extractors = List.from(request.extractors ?? []);
-    _response = null;
+    _response = response;
     _isLoading = false;
     _isRefreshing = false;
     notifyListeners();

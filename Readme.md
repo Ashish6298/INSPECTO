@@ -104,8 +104,8 @@ Tracked from [phase.txt](phase.txt):
   - [x] **Phase 4.1**: Interactive WebSocket Client (Real-time Frame Timeline, echo testing, inbound/outbound filters, preset composer)
   - [x] **Phase 4.2**: Dedicated GraphQL Query & Schema Explorer (Split query/variables editor, auto-indent format, schema introspection explorer)
 - **Milestone 5: Desktop Workspace & Platform Polish**
-  - [ ] **Phase 5.0**: Multi-Tab Request Workspace Management
-  - [ ] **Phase 5.1**: Desktop Responsive Multi-Pane Layout & Keyboard Shortcuts
+  - [x] **Phase 5.0**: Multi-Tab Request Workspace Management (TabSession entity, WorkspaceProvider, WorkspaceTabBar with method badges, dirty indicators, and state sync)
+  - [x] **Phase 5.1**: Desktop Responsive Multi-Pane Layout & Keyboard Shortcuts (DesktopMainScreen with resizable Left Sidebar, Center Request Builder, and Right Response Viewer; Global keyboard shortcuts: Ctrl+Enter, Ctrl+S, Ctrl+T, Ctrl+W, Ctrl+/)
 
 ---
 

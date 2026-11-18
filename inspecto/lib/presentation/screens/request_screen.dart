@@ -5,77 +5,115 @@ import '../providers/request_provider.dart';
 import '../providers/collection_provider.dart';
 import '../providers/history_provider.dart';
 import '../providers/environment_provider.dart';
+import '../providers/workspace_provider.dart';
 import '../widgets/request_url_bar.dart';
 import '../widgets/request_tabs.dart';
 import '../widgets/response_viewer.dart';
 import '../widgets/streaming_response_viewer.dart';
 import '../widgets/curl_import_dialog.dart';
 import '../widgets/code_snippet_dialog.dart';
+import '../widgets/workspace_tab_bar.dart';
+import '../../core/utils/keyboard_shortcuts.dart';
 
-class RequestScreen extends StatelessWidget {
+class RequestScreen extends StatefulWidget {
   const RequestScreen({super.key});
+
+  static void showSaveRequestDialog(BuildContext context) {
+    inspectoShowSaveRequestDialog(context);
+  }
+
+  @override
+  State<RequestScreen> createState() => _RequestScreenState();
+}
+
+class _RequestScreenState extends State<RequestScreen> {
+  final FocusNode _urlFocusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _urlFocusNode.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final requestProvider = context.watch<RequestProvider>();
     final themeProvider = context.watch<ThemeProvider>();
+    final wsProvider = context.watch<WorkspaceProvider>();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Image.asset('assets/logo.png', height: 32, width: 32),
-            const SizedBox(width: 12),
-            const Text(
-              'INSPECTO',
-              style: TextStyle(
-                letterSpacing: 2,
-                fontWeight: FontWeight.w900,
-                fontSize: 18,
+    return GlobalKeyboardShortcutsHandler(
+      onSendRequest: () {
+        context.read<RequestProvider>().sendRequest(
+              environmentProvider: context.read<EnvironmentProvider>(),
+              onResponseReceived: (req, res) {
+                context.read<HistoryProvider>().addEntry(request: req, response: res);
+                context.read<WorkspaceProvider>().updateActiveResponse(res);
+              },
+            );
+      },
+      onSaveRequest: () => RequestScreen.showSaveRequestDialog(context),
+      onNewTab: () => wsProvider.newTab(
+          requestProvider: context.read<RequestProvider>()),
+      onCloseTab: () => wsProvider.closeTab(wsProvider.activeTabIndex,
+          requestProvider: context.read<RequestProvider>()),
+      onFocusUrl: () => _urlFocusNode.requestFocus(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Row(
+            children: [
+              Image.asset('assets/logo.png', height: 32, width: 32),
+              const SizedBox(width: 12),
+              const Text(
+                'INSPECTO',
+                style: TextStyle(
+                  letterSpacing: 2,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 18,
+                ),
               ),
+            ],
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(
+                themeProvider.isDarkMode
+                    ? Icons.light_mode_rounded
+                    : Icons.dark_mode_rounded,
+              ),
+              onPressed: () {
+                themeProvider.toggleTheme();
+              },
+              tooltip: 'Toggle Theme',
             ),
+            IconButton(
+              icon: const Icon(Icons.terminal_rounded),
+              onPressed: () => CurlImportDialog.show(context),
+              tooltip: 'Import cURL',
+            ),
+            IconButton(
+              icon: const Icon(Icons.code_rounded),
+              onPressed: () {
+                final req = requestProvider.getCurrentRequest();
+                CodeSnippetDialog.show(context, req);
+              },
+              tooltip: 'Generate Code',
+            ),
+            IconButton(
+              icon: const Icon(Icons.bookmark_border_rounded),
+              onPressed: () => RequestScreen.showSaveRequestDialog(context),
+              tooltip: 'Save Request (Ctrl+S)',
+            ),
+            const SizedBox(width: 8),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              themeProvider.isDarkMode
-                  ? Icons.light_mode_rounded
-                  : Icons.dark_mode_rounded,
-            ),
-            onPressed: () {
-              themeProvider.toggleTheme();
-            },
-            tooltip: 'Toggle Theme',
-          ),
-          IconButton(
-            icon: const Icon(Icons.terminal_rounded),
-            onPressed: () => CurlImportDialog.show(context),
-            tooltip: 'Import cURL',
-          ),
-          IconButton(
-            icon: const Icon(Icons.code_rounded),
-            onPressed: () {
-              final req = requestProvider.getCurrentRequest();
-              CodeSnippetDialog.show(context, req);
-            },
-            tooltip: 'Generate Code',
-          ),
-          IconButton(
-            icon: const Icon(Icons.bookmark_border_rounded),
-            onPressed: () => _showSaveRequestDialog(context),
-            tooltip: 'Save Request',
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              const RequestUrlBar(),
-              Expanded(
-                child: RefreshIndicator(
+        body: Stack(
+          children: [
+            Column(
+              children: [
+                const WorkspaceTabBar(),
+                RequestUrlBar(focusNode: _urlFocusNode),
+                Expanded(
+                  child: RefreshIndicator(
                   onRefresh: () async {
                     await context.read<RequestProvider>().refresh();
                   },
@@ -195,10 +233,12 @@ class RequestScreen extends StatelessWidget {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-    );
-  }
+    ),
+  );
+}
+}
 
-  void _showSaveRequestDialog(BuildContext context) {
+void inspectoShowSaveRequestDialog(BuildContext context) {
     final requestProvider = context.read<RequestProvider>();
     final collectionProvider = context.read<CollectionProvider>();
 
@@ -370,6 +410,9 @@ class RequestScreen extends StatelessWidget {
                     Navigator.pop(dialogCtx);
                   }
                   if (context.mounted) {
+                    context
+                        .read<WorkspaceProvider>()
+                        .markActiveSaved(newTitle: reqName);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                           content: Text('Saved "$reqName" to collection')),
@@ -384,7 +427,6 @@ class RequestScreen extends StatelessWidget {
       ),
     );
   }
-}
 
 class _EmptyRequestState extends StatelessWidget {
   @override
