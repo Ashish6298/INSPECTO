@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_highlight/flutter_highlight.dart';
 import 'package:flutter_highlight/themes/atom-one-dark.dart';
 import '../providers/request_provider.dart';
+import 'graphql_editor.dart';
 
 class RequestBodyEditor extends StatelessWidget {
   const RequestBodyEditor({super.key});
@@ -36,7 +37,11 @@ class RequestBodyEditor extends StatelessWidget {
         ),
 
         // Body Editor Area
-        if (provider.bodyType != 'none')
+        if (provider.bodyType == 'graphql')
+          const Expanded(
+            child: GraphQLEditor(),
+          )
+        else if (provider.bodyType != 'none')
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(12.0),

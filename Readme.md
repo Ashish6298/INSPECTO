@@ -102,7 +102,7 @@ Tracked from [phase.txt](phase.txt):
 - **Milestone 4: Modern Protocols & Real-Time Streaming**
   - [x] **Phase 4.0**: Server-Sent Events (SSE) & LLM Streaming Response Viewer (Real-time delta tokens, stop stream, auto-scroll, tokens/sec metrics)
   - [x] **Phase 4.1**: Interactive WebSocket Client (Real-time Frame Timeline, echo testing, inbound/outbound filters, preset composer)
-  - [ ] **Phase 4.2**: Dedicated GraphQL Query & Schema Explorer
+  - [x] **Phase 4.2**: Dedicated GraphQL Query & Schema Explorer (Split query/variables editor, auto-indent format, schema introspection explorer)
 - **Milestone 5: Desktop Workspace & Platform Polish**
   - [ ] **Phase 5.0**: Multi-Tab Request Workspace Management
   - [ ] **Phase 5.1**: Desktop Responsive Multi-Pane Layout & Keyboard Shortcuts

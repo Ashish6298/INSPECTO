@@ -76,8 +76,8 @@ class ApiDirectDataSource {
         final resolvedBody = _resolve(request.body!, environmentVariables);
         bodyBytes = utf8.encode(resolvedBody);
 
-        // Auto-set Content-Type if JSON and not explicitly configured
-        if (request.bodyType == 'json' &&
+        // Auto-set Content-Type if JSON or GraphQL and not explicitly configured
+        if ((request.bodyType == 'json' || request.bodyType == 'graphql') &&
             !resolvedHeaders.keys
                 .any((k) => k.toLowerCase() == 'content-type')) {
           resolvedHeaders['Content-Type'] = 'application/json; charset=utf-8';

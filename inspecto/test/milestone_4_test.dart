@@ -6,6 +6,9 @@ import 'package:inspecto/domain/entities/api_request.dart';
 import 'package:inspecto/domain/entities/api_response.dart';
 import 'package:inspecto/data/datasources/sse_stream_data_source.dart';
 import 'package:inspecto/data/datasources/websocket_data_source.dart';
+import 'package:inspecto/data/datasources/api_direct_data_source.dart';
+import 'package:inspecto/data/models/api_request_model.dart';
+import 'package:inspecto/core/utils/graphql_introspection.dart';
 import 'package:inspecto/presentation/providers/websocket_provider.dart';
 import 'package:inspecto/presentation/providers/request_provider.dart';
 import 'package:inspecto/domain/repositories/api_repository.dart';
@@ -254,6 +257,227 @@ void main() {
       await provider.disconnect();
       await Future.delayed(const Duration(milliseconds: 10));
       expect(provider.status, equals(WebSocketStatus.disconnected));
+    });
+  });
+
+  group('Phase 4.2: Dedicated GraphQL Query & Schema Explorer Tests', () {
+    test('formatGraphQL correctly auto-indents single-line and unformatted GraphQL queries', () {
+      const minified =
+          'query GetUser(\$id: ID!) { user(id: \$id) { id name posts { id title } } }';
+      final formatted = GraphQLIntrospection.formatGraphQL(minified);
+
+      expect(formatted, contains('query GetUser(\$id: ID!) {'));
+      expect(formatted, contains('  user(id: \$id) {'));
+      expect(formatted, contains('    id'));
+      expect(formatted, contains('    name'));
+      expect(formatted, contains('    posts {'));
+      expect(formatted, contains('      id'));
+      expect(formatted, contains('      title'));
+      expect(formatted, contains('    }'));
+      expect(formatted, contains('  }'));
+      expect(formatted.endsWith('}'), isTrue);
+    });
+
+    test('buildPayload packs query and variables into standard GraphQL HTTP payload', () {
+      const query = 'query { users { id } }';
+      const variables = '{"limit": 25, "active": true}';
+
+      final payload = GraphQLIntrospection.buildPayload(query, variables);
+      final decoded = jsonDecode(payload) as Map<String, dynamic>;
+
+      expect(decoded['query'], equals(query));
+      expect(decoded['variables'], equals({'limit': 25, 'active': true}));
+    });
+
+    test('buildPayload handles empty or malformed variables gracefully', () {
+      const query = 'query { hello }';
+      final payloadEmpty = GraphQLIntrospection.buildPayload(query, '');
+      final decodedEmpty = jsonDecode(payloadEmpty) as Map<String, dynamic>;
+      expect(decodedEmpty['query'], equals(query));
+      expect(decodedEmpty['variables'], equals({}));
+
+      final payloadInvalid = GraphQLIntrospection.buildPayload(query, '{not valid json}');
+      final decodedInvalid = jsonDecode(payloadInvalid) as Map<String, dynamic>;
+      expect(decodedInvalid['variables'], equals({}));
+    });
+
+    test('extractQueryAndVariables parses both JSON payloads and raw GraphQL strings', () {
+      // 1. JSON payload
+      final jsonPayload = jsonEncode({
+        'query': 'query GetItems { items { id } }',
+        'variables': {'filter': 'active'},
+      });
+      final fromJson = GraphQLIntrospection.extractQueryAndVariables(jsonPayload);
+      expect(fromJson.query, equals('query GetItems { items { id } }'));
+      expect(fromJson.variables, contains('"filter": "active"'));
+
+      // 2. Raw query string
+      const rawString = 'query { ping }';
+      final fromRaw = GraphQLIntrospection.extractQueryAndVariables(rawString);
+      expect(fromRaw.query, equals('query { ping }'));
+      expect(fromRaw.variables, equals('{}'));
+
+      // 3. Null / empty
+      final fromNull = GraphQLIntrospection.extractQueryAndVariables(null);
+      expect(fromNull.query, equals(''));
+      expect(fromNull.variables, equals('{}'));
+    });
+
+    test('parseSchema parses __schema response into queries, mutations, and types', () {
+      final sampleSchemaResponse = {
+        'data': {
+          '__schema': {
+            'queryType': {'name': 'Query'},
+            'mutationType': {'name': 'Mutation'},
+            'types': [
+              {
+                'kind': 'OBJECT',
+                'name': 'Query',
+                'description': 'Root query',
+                'fields': [
+                  {
+                    'name': 'users',
+                    'description': 'Retrieve list of users',
+                    'args': [
+                      {
+                        'name': 'limit',
+                        'description': 'Max results',
+                        'type': {'kind': 'SCALAR', 'name': 'Int', 'ofType': null},
+                        'defaultValue': '10',
+                      }
+                    ],
+                    'type': {
+                      'kind': 'LIST',
+                      'name': null,
+                      'ofType': {
+                        'kind': 'NON_NULL',
+                        'name': null,
+                        'ofType': {'kind': 'OBJECT', 'name': 'User', 'ofType': null},
+                      },
+                    },
+                    'isDeprecated': false,
+                  }
+                ],
+              },
+              {
+                'kind': 'OBJECT',
+                'name': 'Mutation',
+                'description': 'Root mutation',
+                'fields': [
+                  {
+                    'name': 'createUser',
+                    'description': 'Creates a user',
+                    'args': [
+                      {
+                        'name': 'name',
+                        'type': {
+                          'kind': 'NON_NULL',
+                          'name': null,
+                          'ofType': {'kind': 'SCALAR', 'name': 'String', 'ofType': null},
+                        },
+                      }
+                    ],
+                    'type': {'kind': 'OBJECT', 'name': 'User', 'ofType': null},
+                    'isDeprecated': false,
+                  }
+                ],
+              },
+              {
+                'kind': 'OBJECT',
+                'name': 'User',
+                'description': 'User object',
+                'fields': [
+                  {
+                    'name': 'id',
+                    'type': {
+                      'kind': 'NON_NULL',
+                      'name': null,
+                      'ofType': {'kind': 'SCALAR', 'name': 'ID', 'ofType': null},
+                    },
+                  },
+                  {
+                    'name': 'name',
+                    'type': {'kind': 'SCALAR', 'name': 'String', 'ofType': null},
+                  },
+                ],
+              },
+              {
+                'kind': 'OBJECT',
+                'name': '__Schema',
+                'fields': [],
+              }
+            ],
+          }
+        }
+      };
+
+      final doc = GraphQLIntrospection.parseSchema(sampleSchemaResponse);
+
+      expect(doc.isNotEmpty, isTrue);
+      expect(doc.queryTypeName, equals('Query'));
+      expect(doc.mutationTypeName, equals('Mutation'));
+
+      // Queries
+      expect(doc.queries.length, equals(1));
+      final userQuery = doc.queries.first;
+      expect(userQuery.name, equals('users'));
+      expect(userQuery.returnType, equals('[User!]'));
+      expect(userQuery.signature, equals('users(limit: Int = 10): [User!]'));
+      expect(userQuery.description, equals('Retrieve list of users'));
+
+      // Snippet generation
+      final querySnippet = userQuery.generateSnippet();
+      expect(querySnippet, contains('query Users(\$limit: Int) {'));
+      expect(querySnippet, contains('users(limit: \$limit) {'));
+
+      // Mutations
+      expect(doc.mutations.length, equals(1));
+      final createMutation = doc.mutations.first;
+      expect(createMutation.name, equals('createUser'));
+      expect(createMutation.returnType, equals('User'));
+      expect(createMutation.signature, equals('createUser(name: String!): User'));
+
+      final mutationSnippet = createMutation.generateSnippet(isMutation: true);
+      expect(mutationSnippet, contains('mutation CreateUser(\$name: String!) {'));
+
+      // Types (Query and Mutation filtered out, __Schema ignored)
+      expect(doc.types.length, equals(1));
+      final userType = doc.types.first;
+      expect(userType.name, equals('User'));
+      expect(userType.kind, equals('OBJECT'));
+      expect(userType.fields.length, equals(2));
+      expect(userType.fields[0].name, equals('id'));
+      expect(userType.fields[0].returnType, equals('ID!'));
+    });
+
+    test('ApiDirectDataSource auto-injects application/json Content-Type for GraphQL requests', () async {
+      late http.Request sentRequest;
+
+      final mockClient = MockStreamHttpClient((req) async {
+        sentRequest = req as http.Request;
+        return http.StreamedResponse(
+          Stream.value(utf8.encode('{"data":{"users":[]}}')),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      });
+
+      final dataSource = ApiDirectDataSource(client: mockClient);
+      final request = ApiRequestModel(
+        id: 'graphql_test',
+        method: HttpMethod.POST,
+        url: 'https://api.example.com/graphql',
+        headers: {},
+        params: {},
+        body: jsonEncode({'query': 'query { users { id } }'}),
+        bodyType: 'graphql',
+        bodySubType: 'json',
+      );
+
+      final response = await dataSource.executeRequest(request);
+
+      expect(response.statusCode, equals(200));
+      expect(sentRequest.headers['Content-Type'], contains('application/json'));
     });
   });
 }

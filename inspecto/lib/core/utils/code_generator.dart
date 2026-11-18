@@ -47,7 +47,8 @@ class CodeGenerator {
       final encoded = base64Encode(utf8.encode('$user:$pass'));
       headers['Authorization'] = 'Basic $encoded';
     }
-    if (request.bodyType == 'json' && !headers.containsKey('Content-Type')) {
+    if ((request.bodyType == 'json' || request.bodyType == 'graphql') &&
+        !headers.containsKey('Content-Type')) {
       headers['Content-Type'] = 'application/json';
     }
     return headers;
